@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="app-build" content="2026-10-21.6" />
+    <meta name="app-build" content="2026-10-21.7" />
     <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, John, and Mark word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16171b" />
@@ -297,7 +297,7 @@
 
       /* ================= build stamp & update check ================= */
       /* Kept character-for-character identical to the <meta name="app-build"> tag in <head>. */
-      var APP_BUILD_STAMP = "2026-10-21.6";
+      var APP_BUILD_STAMP = "2026-10-21.7";
       function runningStamp() {
         var m = document.querySelector('meta[name="app-build"]');
         return (m && m.getAttribute("content")) || APP_BUILD_STAMP;
@@ -1270,7 +1270,7 @@
           "<p><strong>Tap or click any original word</strong> to study it. The panel leads with the word's translation in this verse, then its <strong>definition</strong> (Strong's, and the meaning range in Brown-Driver-Briggs for Hebrew), then <strong>synonyms &amp; related words</strong> — ordinary English near-equivalents for the word's sense in this verse, and original-language words related to it where the public-domain sources support the relation — then how the word is built and parsed, its dictionary form and Strong's number, and everywhere else the word appears in the book.</p>" +
           "<p><strong>Hear the words.</strong> Every original word carries a small 🔊 beneath it, and every word panel has a <strong>Hear pronunciation</strong> button (with a slower replay beside it) — hearing a word as you read it helps it stay in memory. The voice is your own device's Greek or Hebrew voice: pronunciation here is a <em>modern learning aid</em>, an approximation for practice and memory, not a reconstruction of how these words sounded in Bible times, and the voices available vary from device to device.</p></div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Coverage — honestly stated</h2>' +
-          "<p>Four books are here: <strong>Genesis</strong> (all 50 chapters) and <strong>Exodus</strong> (all 40 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters) and <strong>Mark</strong> (all 16 chapters) in Greek — Mark in the Byzantine text, with its longer ending (16:9–20) in place, as that text carries it. Genesis, John, and Mark are finished to the last word. Exodus's text is complete, and its word tagging stands at 16,301 of its 16,726 words — the rest are left honestly blank, never guessed, and counted exactly in the coverage note below while that work continues. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these four books went through.</p>" +
+          "<p>Four books are here: <strong>Genesis</strong> (all 50 chapters) and <strong>Exodus</strong> (all 40 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters) and <strong>Mark</strong> (all 16 chapters) in Greek — Mark in the Byzantine text, with its longer ending (16:9–20) in place, as that text carries it. Genesis, John, and Mark are finished to the last word, and now Exodus is too: all 16,726 of its Hebrew words carry a tagging and a parsing — the last 425 were worked one by one in their verse context from Brown-Driver-Briggs and Strong's, never guessed — and the coverage note below counts the finished result exactly. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these four books went through.</p>" +
           coverageText() + "</div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Keeping this copy current</h2>' +
           "<p>New books, tagging, and corrections are added as the work is verified. This copy is build <strong>" + esc(runningStamp()) + "</strong>.</p>" +
