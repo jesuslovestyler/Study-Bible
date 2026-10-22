@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="app-build" content="2026-10-21.9" />
-    <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Ruth, Jonah, John, Mark, Luke, and 1 John word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
+    <meta name="app-build" content="2026-10-21.10" />
+    <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Ruth, Jonah, John, Mark, Luke, 1 John, Acts, and James word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16171b" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Study Bible" />
     <meta property="og:title" content="Study Bible — Greek &amp; Hebrew Interlinear" />
-    <meta property="og:description" content="Genesis, Exodus, Ruth, Jonah, John, Mark, Luke, and 1 John in Greek and Hebrew, word by word: a translation of every word in its verse, definitions, synonyms and related words, and pronunciation — public-domain sources only." />
+    <meta property="og:description" content="Genesis, Exodus, Ruth, Jonah, John, Mark, Luke, 1 John, Acts, and James in Greek and Hebrew, word by word: a translation of every word in its verse, definitions, synonyms and related words, and pronunciation — public-domain sources only." />
     <meta property="og:type" content="website" />
     <title>Study Bible — Greek &amp; Hebrew Interlinear</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -278,6 +278,8 @@
     <script src="assets/data-mark.js"></script>
     <script src="assets/data-luke.js"></script>
     <script src="assets/data-1john.js"></script>
+    <script src="assets/data-acts.js"></script>
+    <script src="assets/data-james.js"></script>
     <script src="assets/data-genesis.js"></script>
     <script src="assets/data-exodus.js"></script>
     <script src="assets/data-ruth.js"></script>
@@ -291,7 +293,7 @@
     <script>
       "use strict";
       /* ================= data ================= */
-      var BOOKS = [window.SB_GENESIS, window.SB_EXODUS, window.SB_RUTH, window.SB_JONAH, window.SB_JOHN, window.SB_MARK, window.SB_LUKE, window.SB_1JOHN];
+      var BOOKS = [window.SB_GENESIS, window.SB_EXODUS, window.SB_RUTH, window.SB_JONAH, window.SB_JOHN, window.SB_MARK, window.SB_LUKE, window.SB_1JOHN, window.SB_ACTS, window.SB_JAMES];
       var LEX = window.SB_LEX_GRK || {};
       var LEXHEB = window.SB_LEX_HEB || {};
       /* Each Hebrew book carries its own tagging table: the tagging is our
@@ -303,7 +305,7 @@
 
       /* ================= build stamp & update check ================= */
       /* Kept character-for-character identical to the <meta name="app-build"> tag in <head>. */
-      var APP_BUILD_STAMP = "2026-10-21.9";
+      var APP_BUILD_STAMP = "2026-10-21.10";
       function runningStamp() {
         var m = document.querySelector('meta[name="app-build"]');
         return (m && m.getAttribute("content")) || APP_BUILD_STAMP;
@@ -387,30 +389,65 @@
         if (spkNoteTimer) clearTimeout(spkNoteTimer);
         spkNoteTimer = setTimeout(function () { t.classList.remove("show"); }, 4200);
       }
-      function noVoiceMsg(lang) {
-        return lang === "he-IL" ? "No Hebrew voice available on this device"
-             : lang === "el-GR" ? "No Greek voice available on this device"
-             : "No voice available on this device for this word";
+      function noVoiceNote(lang) {
+        return lang === "he-IL" ? "No Hebrew voice on this device — using your regular voice."
+             : lang === "el-GR" ? "No Greek voice on this device — using your regular voice."
+             : "No voice for this word on this device — using your regular voice.";
+      }
+      function cantPlayNote() { return "The pronunciation couldn't be played on this device."; }
+      function defaultVoice(vs) {
+        for (var i = 0; i < vs.length; i++) { if (vs[i].default) return vs[i]; }
+        return vs.length ? vs[0] : null;
       }
       function speakWord(text, lang, rate, opts) {
         opts = opts || {};
         var clean = speechText(text);
         if (!clean) return;
-        if (!speechOK) { showSpkNote("Pronunciation needs a speech voice, and this device doesn't offer one."); return; }
+        if (!speechOK) { showSpkNote("Pronunciation needs a browser with speech on this device."); return; }
+        var vs = currentVoices();
+        if (!vs.length && !opts.voicesWaited) {
+          /* On first load the voice list can come back empty until the
+             browser announces its voices; wait for that announcement (or
+             a short beat), then speak with whatever the device offers. */
+          var fired = false;
+          var go = function () {
+            if (fired) return; fired = true;
+            try { window.speechSynthesis.removeEventListener("voiceschanged", go); } catch (e) { /* older engines */ }
+            speakWord(text, lang, rate, { lemma: opts.lemma, retried: opts.retried, voicesWaited: true });
+          };
+          try { window.speechSynthesis.addEventListener("voiceschanged", go); } catch (e) { /* the timer below still fires */ }
+          setTimeout(go, 900);
+          return;
+        }
+        attemptSpeak(clean, lang, rate, opts, vs);
+      }
+      function attemptSpeak(clean, lang, rate, opts, vs) {
         try {
           var synth = window.speechSynthesis;
-          var vs = currentVoices();
-          var voice = pickVoice(lang, vs);
-          if (vs.length && !voice) showSpkNote(noVoiceMsg(lang));
+          var voice = opts.forceDefault ? null : pickVoice(lang, vs);
+          var fallback = null;
+          if (!voice) {
+            fallback = defaultVoice(vs);
+            if (fallback && !opts.forceDefault) showSpkNote(noVoiceNote(lang));
+          }
           /* Cancel only what is actually sounding, and only BEFORE speaking:
              Safari silently swallows an utterance that follows a cancel()
-             issued while the synthesizer was idle. */
+             issued while the synthesizer was idle. A paused or stuck
+             synthesizer is resumed before speaking for the same reason. */
           if (synth.speaking || synth.pending) synth.cancel();
           try { synth.resume(); } catch (e2) { /* not every engine has one */ }
           var u = new SpeechSynthesisUtterance(clean);
-          u.lang = lang;
           u.rate = rate || 0.85;
-          if (voice) u.voice = voice;
+          /* The round-1 failure: an utterance pinned to a language the
+             device has no voice for (el-GR on a Mac with no Greek voice
+             installed) is dropped by the speech engine without a sound.
+             So the chain is: a voice for the word's own language if one
+             exists; otherwise the device's default voice, spoken under
+             that voice's own language — a tap always makes a sound or
+             shows a plain explanation, never silence. */
+          if (voice) { u.voice = voice; u.lang = voice.lang || lang; }
+          else if (fallback) { u.voice = fallback; u.lang = fallback.lang || lang; }
+          else { u.lang = lang; }
           u.onerror = function (ev) {
             var err = ev && ev.error;
             if (err === "interrupted" || err === "canceled" || err === "cancelled") return;
@@ -421,14 +458,21 @@
             if (!opts.retried && opts.lemma) {
               var lem = speechText(opts.lemma);
               if (lem && lem !== clean && clean.length <= 3) {
-                speakWord(opts.lemma, lang, rate, { retried: true });
+                speakWord(opts.lemma, lang, rate, { retried: true, voicesWaited: true });
                 return;
               }
             }
-            showSpkNote(noVoiceMsg(lang));
+            /* If the matched-language voice itself failed, fall back once
+               to the device's default voice before giving up. */
+            if (!opts.forceDefault && voice) {
+              showSpkNote(noVoiceNote(lang));
+              attemptSpeak(clean, lang, rate, { retried: true, forceDefault: true }, vs);
+              return;
+            }
+            showSpkNote(cantPlayNote());
           };
           synth.speak(u);
-        } catch (e) { showSpkNote(noVoiceMsg(lang)); }
+        } catch (e) { showSpkNote(cantPlayNote()); }
       }
       if (speechOK) {
         try {
@@ -440,7 +484,7 @@
       }
       function hearRowHTML(text, lang, lemmaText) {
         if (!speechOK) {
-          return '<p class="small muted">Pronunciation playback uses your device\'s own speech voice, and this device doesn\'t offer one — so the hear buttons are unavailable here.</p>';
+          return '<p class="small muted">Pronunciation needs a browser with speech on this device, so the hear buttons can\'t play here.</p>';
         }
         var h = '<div class="hear-row">' +
           '<button class="hear-btn" type="button" data-hear="main">🔊 Hear pronunciation</button>' +
@@ -858,6 +902,7 @@
           else if (strong === 1097 && base === "perceived") base = "perceive"; /* gloss stored as a past-tense form, which doubled the ending ("perceiveded") */
           else if (strong === 907 && base === "baptist") base = "baptize"; /* gloss stored as the noun "the Baptist" for the verb βαπτίζω */
           else if (strong === 3004 && base === "ask" && mood === "P") base = "say"; /* λέγων is "saying" */
+          else if (strong === 350) base = "examine"; /* ἀνακρίνω — to scrutinize, examine (Strong's own definition); its render list leads with "ask", which undersells Acts 17:11, "examining the Scriptures" */
           else if (strong === 3670) base = "confess"; /* ὁμολογέω — its gloss is stored hyphenated ("con-fess"); the verb is "confess" (1 John 1:9) */
           else if (strong === 2511) base = "cleanse"; /* καθαρίζω — "cleanse", not the adjective "clean" (1 John 1:7, 1:9) */
           if (!base) base = gloss.toLowerCase();
@@ -865,6 +910,11 @@
           return conjugateVerb(base, tense, voice, mood, person);
         }
         /* non-verbs: the gloss was chosen for this verse; fix known mismatches */
+        if (strong === 3107) { /* μακάριος — when μᾶλλον stands beside it (here with ἐστιν between), the blessing itself is the "more": "It is more blessed to give than to receive" (Acts 20:35) */
+          var nxb = tokens && (tokens[idx + 1] || tokens[idx + 2]);
+          var nxb2 = tokens && tokens[idx + 2];
+          if ((nxb && nxb[1] === 3123) || (nxb2 && nxb2[1] === 3123)) return "more blessed";
+        }
         if (strong === 3083) return "a ransom"; /* λύτρον — Mark 10:45, "a ransom for many" */
         if (strong === 4103) return "faithful"; /* πιστός — the adjective: "he is faithful" (1 John 1:9); its gloss list leads with the verb rendering "believe" */
         if (strong === 5336) return "a manger"; /* φάτνη — Luke 2:7, "laid him in a manger" (Strong's printed text reads "manger"; one e-text digitizes it "manager") */
@@ -1006,7 +1056,10 @@
         4697: ["felt pity for", "was moved with pity"], 5143: ["hasten", "hurry", "race"],
         1968: ["fall upon", "seize upon", "embrace"], 4135: ["accomplished", "brought to fulfillment", "fully assured"],
         2434: ["atonement", "offering for sin", "appeasement of God's wrath against sin"],
-        26: ["charity", "affection", "devotion", "brotherly love"]
+        26: ["charity", "affection", "devotion", "brotherly love"],
+        1411: ["might", "strength", "ability"],
+        3340: ["change one's mind", "turn from sin", "turn back"],
+        3498: ["lifeless", "deceased", "without life"]
       };
       var GRK_SYN_NOTE = {
         3056: "In John, λόγος — the Word — points to Christ himself, the Divine Expression; John's use of the word is richer than any synonym, and no near-equivalent carries its full weight here.",
@@ -1078,7 +1131,8 @@
         2073: "evening — the evening tide, the close of day (the feminine of an adjective meaning “evening”).",
         1065: "a particle of emphasis or qualification — at least, indeed, yet; English often folds it into the word beside it.",
         2289: "to kill, to put to death — literally or figuratively (from θάνατος, death, G2288).",
-        5184: "Tyre — a place in Palestine (of Hebrew origin, H6865)."
+        5184: "Tyre — a place in Palestine (of Hebrew origin, H6865).",
+        2063: "red — in the New Testament used with θάλασσα (sea) of the Red Sea, the sea God parted for Israel (Acts 7:36)."
       };
       function bdbSynonyms(e, base) {
         var out = [], seen = {};
@@ -1275,7 +1329,9 @@
           john: '<span class="orig grk">Ἐν ἀρχῇ ἦν ὁ λόγος</span>',
           mark: '<span class="orig grk">Ἀρχὴ τοῦ εὐαγγελίου Ἰησοῦ χριστοῦ</span>',
           luke: '<span class="orig grk">Ἐπειδήπερ πολλοὶ ἐπεχείρησαν</span>',
-          "1john": '<span class="orig grk">Ὃ ἦν ἀπ᾽ ἀρχῆς, ὃ ἀκηκόαμεν</span>'
+          "1john": '<span class="orig grk">Ὃ ἦν ἀπ᾽ ἀρχῆς, ὃ ἀκηκόαμεν</span>',
+          acts: '<span class="orig grk">Τὸν μὲν πρῶτον λόγον ἐποιησάμην</span>',
+          james: '<span class="orig grk">Ἰάκωβος, θεοῦ καὶ κυρίου Ἰησοῦ</span>'
         };
         var cards = BOOKS.map(function (b) {
           var st = bookStats(b);
@@ -1297,7 +1353,7 @@
           "<p><strong>Tap or click any original word</strong> to study it. The panel leads with the word's translation in this verse, then its <strong>definition</strong> (Strong's, and the meaning range in Brown-Driver-Briggs for Hebrew), then <strong>synonyms &amp; related words</strong> — ordinary English near-equivalents for the word's sense in this verse, and original-language words related to it where the public-domain sources support the relation — then how the word is built and parsed, its dictionary form and Strong's number, and everywhere else the word appears in the book.</p>" +
           "<p><strong>Hear the words.</strong> Every original word carries a small 🔊 beneath it, and every word panel has a <strong>Hear pronunciation</strong> button (with a slower replay beside it) — hearing a word as you read it helps it stay in memory. The voice is your own device's Greek or Hebrew voice: pronunciation here is a <em>modern learning aid</em>, an approximation for practice and memory, not a reconstruction of how these words sounded in Bible times, and the voices available vary from device to device.</p></div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Coverage — honestly stated</h2>' +
-          "<p>Eight books are here: <strong>Genesis</strong> (all 50 chapters), <strong>Exodus</strong> (all 40 chapters), <strong>Ruth</strong> (all 4 chapters), and <strong>Jonah</strong> (all 4 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters), <strong>Mark</strong> (all 16 chapters), <strong>Luke</strong> (all 24 chapters), and <strong>1 John</strong> (all 5 chapters) in Greek — the Greek books in the Byzantine text, with Mark's longer ending (16:9–20) in place, as that text carries it. Each book is finished to the last word: every word carries a translation in its verse, and each Hebrew book's words carry a tagging and a parsing worked word by word from Brown-Driver-Briggs and Strong's, never guessed — Ruth's 1,295 words are the newest Hebrew, tagged the same slow way, and 1 John's 2,151 words are the newest Greek. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these eight books went through.</p>" +
+          "<p>Ten books are here: <strong>Genesis</strong> (all 50 chapters), <strong>Exodus</strong> (all 40 chapters), <strong>Ruth</strong> (all 4 chapters), and <strong>Jonah</strong> (all 4 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters), <strong>Mark</strong> (all 16 chapters), <strong>Luke</strong> (all 24 chapters), <strong>1 John</strong> (all 5 chapters), <strong>Acts</strong> (all 28 chapters), and <strong>James</strong> (all 5 chapters) in Greek — the Greek books in the Byzantine text, with Mark's longer ending (16:9–20) in place, as that text carries it. Each book is finished to the last word: every word carries a translation in its verse, and each Hebrew book's words carry a tagging and a parsing worked word by word from Brown-Driver-Briggs and Strong's, never guessed — Ruth's 1,295 words are the newest Hebrew, tagged the same slow way, and Acts' 18,671 words and James' 1,760 words are the newest Greek. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these ten books went through.</p>" +
           coverageText() + "</div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Keeping this copy current</h2>' +
           "<p>New books, tagging, and corrections are added as the work is verified. This copy is build <strong>" + esc(runningStamp()) + "</strong>.</p>" +
@@ -1327,13 +1383,13 @@
           hebPara("Exodus", ce) +
           hebPara("Ruth", cr) +
           hebPara("Jonah", cj) +
-          "<p><strong>Word study coverage</strong>, counted from the data in this app: of all " + fmt(w.total) + " words in Genesis, Exodus, Ruth, Jonah, John, Mark, Luke, and 1 John, <strong>" + fmt(w.translated) + "</strong> carry a translation in their verse, <strong>" + fmt(w.defined) + "</strong> carry a definition, <strong>" + fmt(w.withSyn) + "</strong> open a panel with a Synonyms &amp; related words section, and <strong>" + fmt(w.withRel) + "</strong> have original-language related words supported by Strong's own derivation and comparison fields. Where a word has no honest English synonym — “God”, and most names — its panel says so plainly rather than inventing one.</p>";
+          "<p><strong>Word study coverage</strong>, counted from the data in this app: of all " + fmt(w.total) + " words in Genesis, Exodus, Ruth, Jonah, John, Mark, Luke, 1 John, Acts, and James, <strong>" + fmt(w.translated) + "</strong> carry a translation in their verse, <strong>" + fmt(w.defined) + "</strong> carry a definition, <strong>" + fmt(w.withSyn) + "</strong> open a panel with a Synonyms &amp; related words section, and <strong>" + fmt(w.withRel) + "</strong> have original-language related words supported by Strong's own derivation and comparison fields. Where a word has no honest English synonym — “God”, and most names — its panel says so plainly rather than inventing one.</p>";
       }
 
       function sourcesHTML() {
         return '<div class="card sources" id="sources"><h2 style="margin-top:0.2rem">Sources &amp; credits</h2>' +
           "<p>Everything in this app is <strong>public domain</strong>. Each source below names the basis of its status.</p>" +
-          '<p><span class="src-name">Greek text, Strong\'s numbers &amp; parsings of John, Mark, Luke, and 1 John</span> — <em>The New Testament in the Original Greek: Byzantine Textform 2018</em>, compiled by Maurice A. Robinson and William G. Pierpont. Public domain by the editors\' own dedication: the printed editions release all rights in the text to everyone, and the official data repository (github.com/byztxt/byzantine-majority-text), from which this text was taken, is released under the Unlicense.</p>' +
+          '<p><span class="src-name">Greek text, Strong\'s numbers &amp; parsings of John, Mark, Luke, 1 John, Acts, and James</span> — <em>The New Testament in the Original Greek: Byzantine Textform 2018</em>, compiled by Maurice A. Robinson and William G. Pierpont. Public domain by the editors\' own dedication: the printed editions release all rights in the text to everyone, and the official data repository (github.com/byztxt/byzantine-majority-text), from which this text was taken, is released under the Unlicense.</p>' +
           '<p><span class="src-name">Greek dictionary</span> — <em>Strong\'s Greek Dictionary</em>, James Strong, 1890. Public domain by age. Supplies each word\'s dictionary form, definition, word origin, and the list of King James renderings from which the gloss under each word is chosen. E-text prepared by Ulrik Petersen (openscriptures/strongs).</p>' +
           '<p><span class="src-name">Hebrew text of Genesis, Exodus, Ruth, and Jonah</span> — the <em>Westminster Leningrad Codex</em>, the electronic text of the Leningrad Codex (written about AD 1008), maintained by the J. Alan Groves Center. Public domain; Genesis\'s text was taken from the CrossWire Bible Society\'s module, which distributes it as public domain, and Exodus\'s, Ruth\'s, and Jonah\'s from the same codex in its Unicode/XML edition (the tanach.us edition, prepared by C. V. Kimball from the Westminster Leningrad Codex) — the editions were checked against each other on Genesis before Exodus, Ruth, and Jonah were built from it.</p>' +
           '<p><span class="src-name">Hebrew dictionary (Strong\'s)</span> — <em>Strong\'s Hebrew Dictionary</em>, James Strong, 1890. Public domain by age. Supplies each Hebrew word\'s dictionary form, transliteration, definition, and King James renderings. E-text from the OpenScriptures Strong\'s collection (github.com/openscriptures/strongs), whose own header declares the work public domain; before use, the e-text was checked entry by entry — all 8,674 entries, H1 to H8674, present and accounted for.</p>' +
@@ -1397,6 +1453,15 @@
         }
         if (b.id === "luke" && ch === 17) {
           html += '<p class="reader-note">This chapter has no verse 36: the Byzantine text steps from verse 35 straight to verse 37, and the World English Bible likewise leaves verse 36 blank. Nothing is missing here — the verse numbered 36 in some other editions is not part of this text.</p>';
+        }
+        if (b.id === "acts" && ch === 8) {
+          html += '<p class="reader-note">This chapter has no verse 37: the Byzantine text steps from verse 36 straight to verse 38, and the World English Bible likewise leaves verse 37 blank. Nothing is missing here — the verse numbered 37 in some other editions is not part of this text.</p>';
+        }
+        if (b.id === "acts" && ch === 15) {
+          html += '<p class="reader-note">This chapter has no verse 34: the Byzantine text steps from verse 33 straight to verse 35, and the World English Bible likewise leaves verse 34 blank. Nothing is missing here — the verse numbered 34 in some other editions is not part of this text.</p>';
+        }
+        if (b.id === "acts" && ch === 24) {
+          html += '<p class="reader-note">This chapter has no verse 7: the Byzantine text steps from verse 6 straight to verse 8, and the World English Bible likewise leaves verse 7 blank. Nothing is missing here — the verse numbered 7 in some other editions is not part of this text.</p>';
         }
         chap.forEach(function (v) {
           html += '<section class="verse" id="v' + v.v + '" data-v="' + v.v + '">';
@@ -1610,7 +1675,7 @@
           html += greekOccSections(occAll, occ, strong);
         } else {
           html += "<h3>Occurrences</h3>";
-          html += "<p>This word does not occur in John, Mark, Luke, or 1 John; it is here because Strong's dictionary connects it with a word that does.</p>";
+          html += "<p>This word does not occur in John, Mark, Luke, 1 John, Acts, or James; it is here because Strong's dictionary connects it with a word that does.</p>";
         }
         openSheet(html);
         document.getElementById("sheet-close").addEventListener("click", closeSheet);
