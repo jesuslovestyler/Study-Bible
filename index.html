@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="app-build" content="2026-10-21.7" />
-    <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, John, and Mark word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
+    <meta name="app-build" content="2026-10-21.8" />
+    <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Jonah, John, Mark, and Luke word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16171b" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Study Bible" />
     <meta property="og:title" content="Study Bible — Greek &amp; Hebrew Interlinear" />
-    <meta property="og:description" content="Genesis, Exodus, John, and Mark in Greek and Hebrew, word by word: a translation of every word in its verse, definitions, synonyms and related words, and pronunciation — public-domain sources only." />
+    <meta property="og:description" content="Genesis, Exodus, Jonah, John, Mark, and Luke in Greek and Hebrew, word by word: a translation of every word in its verse, definitions, synonyms and related words, and pronunciation — public-domain sources only." />
     <meta property="og:type" content="website" />
     <title>Study Bible — Greek &amp; Hebrew Interlinear</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -276,28 +276,31 @@
 
     <script src="assets/data-john.js"></script>
     <script src="assets/data-mark.js"></script>
+    <script src="assets/data-luke.js"></script>
     <script src="assets/data-genesis.js"></script>
     <script src="assets/data-exodus.js"></script>
+    <script src="assets/data-jonah.js"></script>
     <script src="assets/data-lex-greek.js"></script>
     <script src="assets/data-lex-hebrew.js"></script>
     <script src="assets/data-heb-tags.js"></script>
     <script src="assets/data-ex-tags.js"></script>
+    <script src="assets/data-jonah-tags.js"></script>
     <script>
       "use strict";
       /* ================= data ================= */
-      var BOOKS = [window.SB_GENESIS, window.SB_EXODUS, window.SB_JOHN, window.SB_MARK];
+      var BOOKS = [window.SB_GENESIS, window.SB_EXODUS, window.SB_JONAH, window.SB_JOHN, window.SB_MARK, window.SB_LUKE];
       var LEX = window.SB_LEX_GRK || {};
       var LEXHEB = window.SB_LEX_HEB || {};
       /* Each Hebrew book carries its own tagging table: the tagging is our
          own work per book, and occurrence rulings belong to their own book. */
-      var HEBTAGS_BY_BOOK = { genesis: window.SB_HEB_TAGS || {}, exodus: window.SB_HEB_TAGS_EX || {} };
+      var HEBTAGS_BY_BOOK = { genesis: window.SB_HEB_TAGS || {}, exodus: window.SB_HEB_TAGS_EX || {}, jonah: window.SB_HEB_TAGS_JONAH || {} };
       var HEBTAGS = HEBTAGS_BY_BOOK.genesis;
       var BOOKMAP = {};
       BOOKS.forEach(function (b) { BOOKMAP[b.id] = b; });
 
       /* ================= build stamp & update check ================= */
       /* Kept character-for-character identical to the <meta name="app-build"> tag in <head>. */
-      var APP_BUILD_STAMP = "2026-10-21.7";
+      var APP_BUILD_STAMP = "2026-10-21.8";
       function runningStamp() {
         var m = document.querySelector('meta[name="app-build"]');
         return (m && m.getAttribute("content")) || APP_BUILD_STAMP;
@@ -735,6 +738,7 @@
         "get": ["got", "gotten", "gets", "getting"], "lay": ["laid", "laid", "lays", "laying"],
         "mean": ["meant", "meant", "means", "meaning"], "set": ["set", "set", "sets", "setting"],
         "shoot": ["shot", "shot", "shoots", "shooting"], "slay": ["slew", "slain", "slays", "slaying"],
+        "spring": ["sprang", "sprung", "springs", "springing"], "must": ["must", "must", "must", "musting"],
         "spend": ["spent", "spent", "spends", "spending"], "spread": ["spread", "spread", "spreads", "spreading"],
         "strike": ["struck", "struck", "strikes", "striking"], "wake": ["woke", "woken", "wakes", "waking"],
         "die": ["died", "died", "dies", "dying"], "lie": ["lay", "lain", "lies", "lying"]
@@ -834,6 +838,8 @@
           }
           var base = gloss.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
           if (strong === 1096) base = "become";
+          else if (strong === 4697) base = "move with compassion"; /* σπλαγχνίζομαι — its stored gloss ("have(be moved with)compassion") conjugated to gibberish ("havecompassioned") */
+          else if (strong === 4135) base = "fulfill"; /* πληροφορέω — Luke 1:1, "the things having been fulfilled among us" */
           else if (strong === 2597) base = "come down";
           else if (strong === 305) base = "go up";
           else if (strong === 3140) base = "testify";
@@ -849,10 +855,12 @@
           else if (strong === 907 && base === "baptist") base = "baptize"; /* gloss stored as the noun "the Baptist" for the verb βαπτίζω */
           else if (strong === 3004 && base === "ask" && mood === "P") base = "say"; /* λέγων is "saying" */
           if (!base) base = gloss.toLowerCase();
+          if (strong === 5143 && mood === "P" && tense === "A") return "ran"; /* δραμών — the aorist participle of τρέχω; Luke 15:20, "his father ran" (and Mark 5:6) */
           return conjugateVerb(base, tense, voice, mood, person);
         }
         /* non-verbs: the gloss was chosen for this verse; fix known mismatches */
         if (strong === 3083) return "a ransom"; /* λύτρον — Mark 10:45, "a ransom for many" */
+        if (strong === 5336) return "a manger"; /* φάτνη — Luke 2:7, "laid him in a manger" (Strong's printed text reads "manger"; one e-text digitizes it "manager") */
         if (strong === 3756 && (gloss === "nay")) return "not";
         if (strong === 3361 && gloss === "any but") return "not";
         if (strong === 2532 && (gloss === "that" || gloss === "for")) return "and";
@@ -987,7 +995,9 @@
         2889: ["earth", "mankind", "human society"], 5457: ["brightness", "illumination"],
         5207: ["male child", "descendant"], 3962: ["parent", "ancestor"],
         444: ["person", "human being", "individual"], 2962: ["master", "ruler", "sir"],
-        3083: ["redemption price", "price of release"]
+        3083: ["redemption price", "price of release"],
+        4697: ["felt pity for", "was moved with pity"], 5143: ["hasten", "hurry", "race"],
+        1968: ["fall upon", "seize upon", "embrace"], 4135: ["accomplished", "brought to fulfillment", "fully assured"]
       };
       var GRK_SYN_NOTE = {
         3056: "In John, λόγος — the Word — points to Christ himself, the Divine Expression; John's use of the word is richer than any synonym, and no near-equivalent carries its full weight here.",
@@ -1054,6 +1064,10 @@
         687: "a question particle — asking in a way that expects the answer no (a settled form of ἄρα, G686).",
         976: "a book — properly, the inner bark of the papyrus plant; then a sheet or scroll of writing.",
         1682: "Eloi — “my God” (of Chaldean origin, from H426 with “my” attached); Jesus' cry from the cross in Mark 15:34.",
+        2022: "to pour upon, to pour in — from ἐπί (G1909), “upon”, and a word for pouring.",
+        1848: "to despise, to set at nought — to treat as of no account (a variation of ἐξουδενόω, G1847, and meaning the same).",
+        2073: "evening — the evening tide, the close of day (the feminine of an adjective meaning “evening”).",
+        1065: "a particle of emphasis or qualification — at least, indeed, yet; English often folds it into the word beside it.",
         2289: "to kill, to put to death — literally or figuratively (from θάνατος, death, G2288).",
         5184: "Tyre — a place in Palestine (of Hebrew origin, H6865)."
       };
@@ -1247,8 +1261,10 @@
         var samples = {
           genesis: '<span class="heb" dir="rtl">בְּרֵאשִׁית בָּרָא אֱלֹהִים</span>',
           exodus: '<span class="heb" dir="rtl">וְאֵלֶּה שְׁמוֹת בְּנֵי יִשְׂרָאֵל</span>',
+          jonah: '<span class="heb" dir="rtl">וַיְמַן יְהוָה דָּג גָּדוֹל</span>',
           john: '<span class="orig grk">Ἐν ἀρχῇ ἦν ὁ λόγος</span>',
-          mark: '<span class="orig grk">Ἀρχὴ τοῦ εὐαγγελίου Ἰησοῦ χριστοῦ</span>'
+          mark: '<span class="orig grk">Ἀρχὴ τοῦ εὐαγγελίου Ἰησοῦ χριστοῦ</span>',
+          luke: '<span class="orig grk">Ἐπειδήπερ πολλοὶ ἐπεχείρησαν</span>'
         };
         var cards = BOOKS.map(function (b) {
           var st = bookStats(b);
@@ -1270,7 +1286,7 @@
           "<p><strong>Tap or click any original word</strong> to study it. The panel leads with the word's translation in this verse, then its <strong>definition</strong> (Strong's, and the meaning range in Brown-Driver-Briggs for Hebrew), then <strong>synonyms &amp; related words</strong> — ordinary English near-equivalents for the word's sense in this verse, and original-language words related to it where the public-domain sources support the relation — then how the word is built and parsed, its dictionary form and Strong's number, and everywhere else the word appears in the book.</p>" +
           "<p><strong>Hear the words.</strong> Every original word carries a small 🔊 beneath it, and every word panel has a <strong>Hear pronunciation</strong> button (with a slower replay beside it) — hearing a word as you read it helps it stay in memory. The voice is your own device's Greek or Hebrew voice: pronunciation here is a <em>modern learning aid</em>, an approximation for practice and memory, not a reconstruction of how these words sounded in Bible times, and the voices available vary from device to device.</p></div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Coverage — honestly stated</h2>' +
-          "<p>Four books are here: <strong>Genesis</strong> (all 50 chapters) and <strong>Exodus</strong> (all 40 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters) and <strong>Mark</strong> (all 16 chapters) in Greek — Mark in the Byzantine text, with its longer ending (16:9–20) in place, as that text carries it. Genesis, John, and Mark are finished to the last word, and now Exodus is too: all 16,726 of its Hebrew words carry a tagging and a parsing — the last 425 were worked one by one in their verse context from Brown-Driver-Briggs and Strong's, never guessed — and the coverage note below counts the finished result exactly. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these four books went through.</p>" +
+          "<p>Six books are here: <strong>Genesis</strong> (all 50 chapters), <strong>Exodus</strong> (all 40 chapters), and <strong>Jonah</strong> (all 4 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters), <strong>Mark</strong> (all 16 chapters), and <strong>Luke</strong> (all 24 chapters) in Greek — the Greek books in the Byzantine text, with Mark's longer ending (16:9–20) in place, as that text carries it. Each book is finished to the last word: every word carries a translation in its verse, and each Hebrew book's words carry a tagging and a parsing worked word by word from Brown-Driver-Briggs and Strong's, never guessed — Jonah's 688 words are the newest, tagged the same slow way. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these six books went through.</p>" +
           coverageText() + "</div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Keeping this copy current</h2>' +
           "<p>New books, tagging, and corrections are added as the work is verified. This copy is build <strong>" + esc(runningStamp()) + "</strong>.</p>" +
@@ -1286,6 +1302,7 @@
       function coverageText() {
         var cg = hebrewCoverage(BOOKMAP.genesis);
         var ce = hebrewCoverage(BOOKMAP.exodus);
+        var cj = hebrewCoverage(BOOKMAP.jonah);
         var w = wordStudyCoverage();
         function hebPara(name, c) {
           return "<p>Of " + name + "'s " + fmt(c.total) + " Hebrew words, <strong>" + fmt(c.glossed) + "</strong> carry a word tagging and a parsing, and <strong>" + fmt(c.lemma) + "</strong> are linked to their dictionary word and Strong's number. " +
@@ -1296,22 +1313,23 @@
         return "<p>For the Hebrew books, no ready-made public-domain Hebrew tagging exists (the well-known Hebrew taggings are Creative Commons, and this app uses public-domain data only), so the tagging here is <strong>our own work</strong>, built word by word from Brown-Driver-Briggs (1906) and Strong's Hebrew dictionary (1890).</p>" +
           hebPara("Genesis", cg) +
           hebPara("Exodus", ce) +
-          "<p><strong>Word study coverage</strong>, counted from the data in this app: of all " + fmt(w.total) + " words in Genesis, Exodus, John, and Mark, <strong>" + fmt(w.translated) + "</strong> carry a translation in their verse, <strong>" + fmt(w.defined) + "</strong> carry a definition, <strong>" + fmt(w.withSyn) + "</strong> open a panel with a Synonyms &amp; related words section, and <strong>" + fmt(w.withRel) + "</strong> have original-language related words supported by Strong's own derivation and comparison fields. Where a word has no honest English synonym — “God”, and most names — its panel says so plainly rather than inventing one.</p>";
+          hebPara("Jonah", cj) +
+          "<p><strong>Word study coverage</strong>, counted from the data in this app: of all " + fmt(w.total) + " words in Genesis, Exodus, Jonah, John, Mark, and Luke, <strong>" + fmt(w.translated) + "</strong> carry a translation in their verse, <strong>" + fmt(w.defined) + "</strong> carry a definition, <strong>" + fmt(w.withSyn) + "</strong> open a panel with a Synonyms &amp; related words section, and <strong>" + fmt(w.withRel) + "</strong> have original-language related words supported by Strong's own derivation and comparison fields. Where a word has no honest English synonym — “God”, and most names — its panel says so plainly rather than inventing one.</p>";
       }
 
       function sourcesHTML() {
         return '<div class="card sources" id="sources"><h2 style="margin-top:0.2rem">Sources &amp; credits</h2>' +
           "<p>Everything in this app is <strong>public domain</strong>. Each source below names the basis of its status.</p>" +
-          '<p><span class="src-name">Greek text, Strong\'s numbers &amp; parsings of John and Mark</span> — <em>The New Testament in the Original Greek: Byzantine Textform 2018</em>, compiled by Maurice A. Robinson and William G. Pierpont. Public domain by the editors\' own dedication: the printed editions release all rights in the text to everyone, and the official data repository (github.com/byztxt/byzantine-majority-text), from which this text was taken, is released under the Unlicense.</p>' +
+          '<p><span class="src-name">Greek text, Strong\'s numbers &amp; parsings of John, Mark, and Luke</span> — <em>The New Testament in the Original Greek: Byzantine Textform 2018</em>, compiled by Maurice A. Robinson and William G. Pierpont. Public domain by the editors\' own dedication: the printed editions release all rights in the text to everyone, and the official data repository (github.com/byztxt/byzantine-majority-text), from which this text was taken, is released under the Unlicense.</p>' +
           '<p><span class="src-name">Greek dictionary</span> — <em>Strong\'s Greek Dictionary</em>, James Strong, 1890. Public domain by age. Supplies each word\'s dictionary form, definition, word origin, and the list of King James renderings from which the gloss under each word is chosen. E-text prepared by Ulrik Petersen (openscriptures/strongs).</p>' +
-          '<p><span class="src-name">Hebrew text of Genesis and Exodus</span> — the <em>Westminster Leningrad Codex</em>, the electronic text of the Leningrad Codex (written about AD 1008), maintained by the J. Alan Groves Center. Public domain; Genesis\'s text was taken from the CrossWire Bible Society\'s module, which distributes it as public domain, and Exodus\'s from the same codex in its Unicode/XML edition (the tanach.us edition, prepared by C. V. Kimball from the Westminster Leningrad Codex) — the two were checked against each other on Genesis before Exodus was built from it.</p>' +
+          '<p><span class="src-name">Hebrew text of Genesis, Exodus, and Jonah</span> — the <em>Westminster Leningrad Codex</em>, the electronic text of the Leningrad Codex (written about AD 1008), maintained by the J. Alan Groves Center. Public domain; Genesis\'s text was taken from the CrossWire Bible Society\'s module, which distributes it as public domain, and Exodus\'s and Jonah\'s from the same codex in its Unicode/XML edition (the tanach.us edition, prepared by C. V. Kimball from the Westminster Leningrad Codex) — the editions were checked against each other on Genesis before Exodus and Jonah were built from it.</p>' +
           '<p><span class="src-name">Hebrew dictionary (Strong\'s)</span> — <em>Strong\'s Hebrew Dictionary</em>, James Strong, 1890. Public domain by age. Supplies each Hebrew word\'s dictionary form, transliteration, definition, and King James renderings. E-text from the OpenScriptures Strong\'s collection (github.com/openscriptures/strongs), whose own header declares the work public domain; before use, the e-text was checked entry by entry — all 8,674 entries, H1 to H8674, present and accounted for.</p>' +
           '<p><span class="src-name">Hebrew dictionary (BDB)</span> — <em>A Hebrew and English Lexicon of the Old Testament</em>, Francis Brown, S. R. Driver, and Charles A. Briggs (Brown-Driver-Briggs), Clarendon Press, 1906. Public domain by age. Supplies the meaning range shown in each Hebrew word\'s panel — BDB\'s own sense divisions, drawn from its entry structure. Full text consulted from the public-domain scan at the Internet Archive (item ahebrewandengli00briggoog).</p>' +
-          '<p><span class="src-name">Hebrew word tagging of Genesis and Exodus</span> — our own work, made for this app: the segmentation of each word (its prefixes, core, and pronoun endings), the literal gloss under it, and its parsing were built here from the two lexicons above, word by word, and checked against them. No Creative Commons data and no modern tagged-Hebrew dataset was used. Where a word\'s identity could not be settled from those lexicons, it is left untagged rather than guessed; the coverage note above counts those words exactly.</p>' +
+          '<p><span class="src-name">Hebrew word tagging of Genesis, Exodus, and Jonah</span> — our own work, made for this app: the segmentation of each word (its prefixes, core, and pronoun endings), the literal gloss under it, and its parsing were built here from the two lexicons above, word by word, and checked against them. No Creative Commons data and no modern tagged-Hebrew dataset was used. Where a word\'s identity could not be settled from those lexicons, it is left untagged rather than guessed; the coverage note above counts those words exactly.</p>' +
           '<p><span class="src-name">English verses</span> — the <em>World English Bible</em>, public domain (eBible.org; translation led by Michael Paul Johnson). The WEB is a complete translation printed under each verse; it is not the source of the word-by-word translations.</p>' +
           '<p><span class="src-name">Word translations &amp; synonyms</span> — our own editorial work, made for this app. Each word\'s translation in its verse was derived from its word tagging, its parsing, and the WEB verse as context control, so a verb reads as the action it performs in the verse. The English synonyms are ordinary near-equivalents written here for each word\'s sense in its verse — not copied from any modern thesaurus or any copyrighted or Creative Commons synonym database. Related Greek and Hebrew words are shown only where Strong\'s own derivation and comparison fields support the relation; where the sources support none, that part is simply omitted.</p>' +
           '<p><span class="src-name">Made here</span> — the transliterations and the plain-English wording of the parsings are generated by this app\'s own code from the sources above. The counts of a word\'s occurrences are counted from the text of the books included in this app, and say so.</p>' +
-          '<p class="small muted">In Genesis 32 the Hebrew chapter numbering runs one verse ahead of English Bibles (Hebrew 32:1 is English 31:55). Exodus has the same kind of shift in four places: Hebrew 7:26–29 is English 8:1–4 (so Hebrew chapter 8 is English 8:5–32), Hebrew 21:37 is English 22:1, and Hebrew chapter 22 is English 22:2–31. Affected verses are labeled with their World English Bible reference so the two never get mixed up.</p></div>';
+          '<p class="small muted">In Genesis 32 the Hebrew chapter numbering runs one verse ahead of English Bibles (Hebrew 32:1 is English 31:55). Exodus has the same kind of shift in four places: Hebrew 7:26–29 is English 8:1–4 (so Hebrew chapter 8 is English 8:5–32), Hebrew 21:37 is English 22:1, and Hebrew chapter 22 is English 22:2–31. Jonah has one too: Hebrew Jonah 2:1 is English Jonah 1:17, and Hebrew chapter 2 runs one verse ahead of English Bibles through that chapter (Hebrew 2:2–11 is English 2:1–10). Affected verses are labeled with their World English Bible reference so the two never get mixed up.</p></div>';
       }
 
       function renderBook(b) {
@@ -1323,6 +1341,8 @@
           ? "<p class='reader-note'>Hebrew reads right to left. Genesis 32 follows the Hebrew chapter numbering, which runs one verse ahead of English Bibles from 32:1 onward; those verses carry their World English Bible reference beside the Hebrew one.</p>"
           : b.id === "exodus"
           ? "<p class='reader-note'>Hebrew reads right to left. Exodus follows the Hebrew verse numbering; where it parts from English Bibles (the end of chapter 7 into chapter 8, and chapters 21–22), each verse carries its World English Bible reference beside the Hebrew one.</p>"
+          : b.id === "jonah"
+          ? "<p class='reader-note'>Hebrew reads right to left. Jonah follows the Hebrew verse numbering: Hebrew 2:1 is the World English Bible's 1:17, and Hebrew chapter 2 runs one verse ahead of the WEB through that chapter; those verses carry their World English Bible reference beside the Hebrew one.</p>"
           : "<p class='reader-note'>Greek reads left to right, exactly as printed in the Byzantine Textform.</p>";
         view.innerHTML =
           '<p><a href="#/">‹ All books</a></p>' +
@@ -1356,6 +1376,12 @@
         }
         if (b.id === "exodus" && (ch === 7 || ch === 8 || ch === 21 || ch === 22)) {
           html += '<p class="reader-note">In this part of Exodus the Hebrew verse numbering parts from English Bibles (Hebrew 7:26–29 is English 8:1–4; Hebrew 21:37 is English 22:1; Hebrew chapter 22 is English 22:2–31). Each affected verse is labeled with its World English Bible reference.</p>';
+        }
+        if (b.id === "jonah" && (ch === 1 || ch === 2)) {
+          html += '<p class="reader-note">Jonah follows the Hebrew verse numbering. Hebrew 2:1 is the World English Bible\'s 1:17 — Jonah\'s prayer begins at Hebrew 2:2 (WEB 2:1) — and Hebrew chapter 2 runs one verse ahead of the WEB to the end of the chapter. Chapter 2\'s verses are labeled with their World English Bible reference.</p>';
+        }
+        if (b.id === "luke" && ch === 17) {
+          html += '<p class="reader-note">This chapter has no verse 36: the Byzantine text steps from verse 35 straight to verse 37, and the World English Bible likewise leaves verse 36 blank. Nothing is missing here — the verse numbered 36 in some other editions is not part of this text.</p>';
         }
         chap.forEach(function (v) {
           html += '<section class="verse" id="v' + v.v + '" data-v="' + v.v + '">';
@@ -1456,10 +1482,10 @@
       backdrop.addEventListener("click", closeSheet);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
-      /* Greek occurrences span both Greek books; refs are [bookId, ch, v]. */
+      /* Greek occurrences span the Greek books; refs are [bookId, ch, v]. */
       function greekOccSections(occAll, occ, strong) {
         var html = "";
-        ["john", "mark"].forEach(function (bid) {
+        ["john", "mark", "luke"].forEach(function (bid) {
           var total = occAll.filter(function (r) { return r[0] === bid; }).length;
           if (!total) return;
           var pairs = occ.filter(function (r) { return r[0] === bid; }).map(function (r) { return [r[1], r[2]]; });
@@ -1565,7 +1591,7 @@
           html += greekOccSections(occAll, occ, strong);
         } else {
           html += "<h3>Occurrences</h3>";
-          html += "<p>This word does not occur in John or Mark; it is here because Strong's dictionary connects it with a word that does.</p>";
+          html += "<p>This word does not occur in John, Mark, or Luke; it is here because Strong's dictionary connects it with a word that does.</p>";
         }
         openSheet(html);
         document.getElementById("sheet-close").addEventListener("click", closeSheet);
