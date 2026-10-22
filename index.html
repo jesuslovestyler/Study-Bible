@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="app-build" content="2026-10-22.14" />
-    <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, and Galatians word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
+    <meta name="app-build" content="2026-10-22.15" />
+    <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, Deuteronomy, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, and Hebrews word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16171b" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Study Bible" />
     <meta property="og:title" content="Study Bible — Greek &amp; Hebrew Interlinear" />
-    <meta property="og:description" content="Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, and Galatians in Greek and Hebrew, word by word: a translation of every word in its verse, definitions, synonyms and related words, and pronunciation — public-domain sources only." />
+    <meta property="og:description" content="Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, Deuteronomy, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, and Hebrews in Greek and Hebrew, word by word: a translation of every word in its verse, definitions, synonyms and related words, and pronunciation — public-domain sources only." />
     <meta property="og:type" content="website" />
     <title>Study Bible — Greek &amp; Hebrew Interlinear</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -283,6 +283,7 @@
     <script src="assets/data-matthew.js"></script>
     <script src="assets/data-romans.js"></script>
     <script src="assets/data-galatians.js"></script>
+    <script src="assets/data-hebrews.js"></script>
     <script src="assets/data-genesis.js"></script>
     <script src="assets/data-exodus.js"></script>
     <script src="assets/data-ruth.js"></script>
@@ -290,6 +291,7 @@
     <script src="assets/data-proverbs.js"></script>
     <script src="assets/data-psalms.js"></script>
     <script src="assets/data-isaiah.js"></script>
+    <script src="assets/data-deuteronomy.js"></script>
     <script src="assets/data-lex-greek.js"></script>
     <script src="assets/data-thayer.js"></script>
     <script src="assets/data-lex-hebrew.js"></script>
@@ -300,22 +302,23 @@
     <script src="assets/data-prov-tags.js"></script>
     <script src="assets/data-psa-tags.js"></script>
     <script src="assets/data-isa-tags.js"></script>
+    <script src="assets/data-deut-tags.js"></script>
     <script>
       "use strict";
       /* ================= data ================= */
-      var BOOKS = [window.SB_GENESIS, window.SB_EXODUS, window.SB_RUTH, window.SB_JONAH, window.SB_PROVERBS, window.SB_PSALMS, window.SB_ISAIAH, window.SB_JOHN, window.SB_MARK, window.SB_LUKE, window.SB_1JOHN, window.SB_ACTS, window.SB_JAMES, window.SB_MATTHEW, window.SB_ROMANS, window.SB_GALATIANS];
+      var BOOKS = [window.SB_GENESIS, window.SB_EXODUS, window.SB_RUTH, window.SB_JONAH, window.SB_PROVERBS, window.SB_PSALMS, window.SB_ISAIAH, window.SB_DEUTERONOMY, window.SB_JOHN, window.SB_MARK, window.SB_LUKE, window.SB_1JOHN, window.SB_ACTS, window.SB_JAMES, window.SB_MATTHEW, window.SB_ROMANS, window.SB_GALATIANS, window.SB_HEBREWS];
       var LEX = window.SB_LEX_GRK || {};
       var LEXHEB = window.SB_LEX_HEB || {};
       /* Each Hebrew book carries its own tagging table: the tagging is our
          own work per book, and occurrence rulings belong to their own book. */
-      var HEBTAGS_BY_BOOK = { genesis: window.SB_HEB_TAGS || {}, exodus: window.SB_HEB_TAGS_EX || {}, ruth: window.SB_HEB_TAGS_RUTH || {}, jonah: window.SB_HEB_TAGS_JONAH || {}, proverbs: window.SB_HEB_TAGS_PROV || {}, psalms: window.SB_HEB_TAGS_PSA || {}, isaiah: window.SB_HEB_TAGS_ISA || {} };
+      var HEBTAGS_BY_BOOK = { genesis: window.SB_HEB_TAGS || {}, exodus: window.SB_HEB_TAGS_EX || {}, ruth: window.SB_HEB_TAGS_RUTH || {}, jonah: window.SB_HEB_TAGS_JONAH || {}, proverbs: window.SB_HEB_TAGS_PROV || {}, psalms: window.SB_HEB_TAGS_PSA || {}, isaiah: window.SB_HEB_TAGS_ISA || {}, deuteronomy: window.SB_HEB_TAGS_DEU || {} };
       var HEBTAGS = HEBTAGS_BY_BOOK.genesis;
       var BOOKMAP = {};
       BOOKS.forEach(function (b) { BOOKMAP[b.id] = b; });
 
       /* ================= build stamp & update check ================= */
       /* Kept character-for-character identical to the <meta name="app-build"> tag in <head>. */
-      var APP_BUILD_STAMP = "2026-10-22.14";
+      var APP_BUILD_STAMP = "2026-10-22.15";
       function runningStamp() {
         var m = document.querySelector('meta[name="app-build"]');
         return (m && m.getAttribute("content")) || APP_BUILD_STAMP;
@@ -888,6 +891,7 @@
             if (mood === "S" || mood === "O") return pr ? pr + " may know" : "may know"; /* εἰδῆτε — "that you may know" (1 John 5:13; also Mark 2:10, Luke 5:24) */
             return person === "3S" ? "knows" : (pr ? pr + " know" : "know");
           }
+          if (strong === 4334 && mood === "S" && person === "1P") return "let us draw near"; /* προσέρχομαι in the hortatory subjunctive: "let us draw near" (Hebrews 4:16; 10:22) */
           if (strong === 1410) { /* dynamai: can / could / be able */
             if (mood === "N") return "to be able";
             if (mood === "P") return "being able";
@@ -1168,7 +1172,8 @@
         1065: "a particle of emphasis or qualification — at least, indeed, yet; English often folds it into the word beside it.",
         2289: "to kill, to put to death — literally or figuratively (from θάνατος, death, G2288).",
         5184: "Tyre — a place in Palestine (of Hebrew origin, H6865).",
-        2063: "red — in the New Testament used with θάλασσα (sea) of the Red Sea, the sea God parted for Israel (Acts 7:36)."
+        2063: "red — in the New Testament used with θάλασσα (sea) of the Red Sea, the sea God parted for Israel (Acts 7:36).",
+        2366: "a storm, a tempest — a violent rushing wind (from θύω, G2380, to rush and blow); at Sinai, the storm around the mountain (Hebrews 12:18)."
       };
       function bdbSynonyms(e, base) {
         var out = [], seen = {};
@@ -1364,6 +1369,7 @@
           proverbs: '<span class="heb" dir="rtl">מִשְׁלֵי שְׁלֹמֹה בֶן־דָּוִד</span>',
           psalms: '<span class="heb" dir="rtl">מִזְמוֹר לְדָוִד יְהוָה רֹעִי</span>',
           isaiah: '<span class="heb" dir="rtl">חֲזוֹן יְשַׁעְיָהוּ בֶן־אָמוֹץ</span>',
+          deuteronomy: '<span class="heb" dir="rtl">שְׁמַע יִשְׂרָאֵל יְהוָה אֱלֹהֵינוּ</span>',
           ruth: '<span class="heb" dir="rtl">וַתֹּאמֶר רוּת אַל־תִּפְגְּעִי־בִי</span>',
           john: '<span class="orig grk">Ἐν ἀρχῇ ἦν ὁ λόγος</span>',
           mark: '<span class="orig grk">Ἀρχὴ τοῦ εὐαγγελίου Ἰησοῦ χριστοῦ</span>',
@@ -1373,7 +1379,8 @@
           james: '<span class="orig grk">Ἰάκωβος, θεοῦ καὶ κυρίου Ἰησοῦ</span>',
           matthew: '<span class="orig grk">Βίβλος γενέσεως Ἰησοῦ χριστοῦ</span>',
           romans: '<span class="orig grk">Παῦλος, δοῦλος Ἰησοῦ χριστοῦ</span>',
-          galatians: '<span class="orig grk">Παῦλος ἀπόστολος οὐκ ἀπ᾽ ἀνθρώπων</span>'
+          galatians: '<span class="orig grk">Παῦλος ἀπόστολος οὐκ ἀπ᾽ ἀνθρώπων</span>',
+          hebrews: '<span class="orig grk">Πολυμερῶς καὶ πολυτρόπως πάλαι ὁ θεὸς</span>'
         };
         var cards = BOOKS.map(function (b) {
           var st = bookStats(b);
@@ -1395,7 +1402,7 @@
           "<p><strong>Tap or click any original word</strong> to study it. The panel leads with the word's translation in this verse, then its <strong>definition</strong> (Strong's, and the meaning range in Brown-Driver-Briggs for Hebrew), then <strong>synonyms &amp; related words</strong> — ordinary English near-equivalents for the word's sense in this verse, and original-language words related to it where the public-domain sources support the relation — then how the word is built and parsed, its dictionary form and Strong's number, and everywhere else the word appears in the book.</p>" +
           "<p><strong>Hear the words.</strong> Every original word carries a small 🔊 beneath it, and every word panel has a <strong>Hear pronunciation</strong> button (with a slower replay beside it) — hearing a word as you read it helps it stay in memory. The voice is your own device's Greek or Hebrew voice: pronunciation here is a <em>modern learning aid</em>, an approximation for practice and memory, not a reconstruction of how these words sounded in Bible times, and the voices available vary from device to device.</p></div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Coverage — honestly stated</h2>' +
-          "<p>Sixteen books are here: <strong>Genesis</strong> (all 50 chapters), <strong>Exodus</strong> (all 40 chapters), <strong>Ruth</strong> (all 4 chapters), <strong>Jonah</strong> (all 4 chapters), <strong>Proverbs</strong> (all 31 chapters), <strong>Psalms</strong> (all 150 chapters), and <strong>Isaiah</strong> (all 66 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters), <strong>Mark</strong> (all 16 chapters), <strong>Luke</strong> (all 24 chapters), <strong>1 John</strong> (all 5 chapters), <strong>Acts</strong> (all 28 chapters), <strong>James</strong> (all 5 chapters), <strong>Matthew</strong> (all 28 chapters), <strong>Romans</strong> (all 16 chapters), and <strong>Galatians</strong> (all 6 chapters) in Greek — the Greek books in the Byzantine text, with Mark's longer ending (16:9–20) in place, as that text carries it. Each book is finished to the last word: every word carries a translation in its verse, and each Hebrew book's words carry a tagging and a parsing worked word by word from Brown-Driver-Briggs and Strong's, never guessed — Isaiah's 16,930 words are the newest Hebrew, tagged the same slow way, and Galatians' 2,252 words are the newest Greek. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these sixteen books went through.</p>" +
+          "<p>Eighteen books are here: <strong>Genesis</strong> (all 50 chapters), <strong>Exodus</strong> (all 40 chapters), <strong>Ruth</strong> (all 4 chapters), <strong>Jonah</strong> (all 4 chapters), <strong>Proverbs</strong> (all 31 chapters), <strong>Psalms</strong> (all 150 chapters), <strong>Isaiah</strong> (all 66 chapters), and <strong>Deuteronomy</strong> (all 34 chapters) in Hebrew, and <strong>John</strong> (all 21 chapters), <strong>Mark</strong> (all 16 chapters), <strong>Luke</strong> (all 24 chapters), <strong>1 John</strong> (all 5 chapters), <strong>Acts</strong> (all 28 chapters), <strong>James</strong> (all 5 chapters), <strong>Matthew</strong> (all 28 chapters), <strong>Romans</strong> (all 16 chapters), <strong>Galatians</strong> (all 6 chapters), and <strong>Hebrews</strong> (all 13 chapters) in Greek — the Greek books in the Byzantine text, with Mark's longer ending (16:9–20) in place, as that text carries it. Each book is finished to the last word: every word carries a translation in its verse, and each Hebrew book's words carry a tagging and a parsing worked word by word from Brown-Driver-Briggs and Strong's, never guessed — Deuteronomy's 14,294 words are the newest Hebrew, tagged the same slow way, and Hebrews' 4,987 words are the newest Greek. The whole Bible is <em>not</em> here yet. More books will be added one at a time, and only after each book's data has been verified against its public-domain source — the same checking these eighteen books went through.</p>" +
           coverageText() + "</div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">Keeping this copy current</h2>' +
           "<p>New books, tagging, and corrections are added as the work is verified. This copy is build <strong>" + esc(runningStamp()) + "</strong>.</p>" +
@@ -1416,6 +1423,7 @@
         var cp = hebrewCoverage(BOOKMAP.proverbs);
         var cps = hebrewCoverage(BOOKMAP.psalms);
         var cisa = hebrewCoverage(BOOKMAP.isaiah);
+        var cdeu = hebrewCoverage(BOOKMAP.deuteronomy);
         var w = wordStudyCoverage();
         function hebPara(name, c) {
           return "<p>Of " + name + "'s " + fmt(c.total) + " Hebrew words, <strong>" + fmt(c.glossed) + "</strong> carry a word tagging and a parsing, and <strong>" + fmt(c.lemma) + "</strong> are linked to their dictionary word and Strong's number. " +
@@ -1431,24 +1439,25 @@
           hebPara("Proverbs", cp) +
           hebPara("Psalms", cps) +
           hebPara("Isaiah", cisa) +
-          "<p><strong>Word study coverage</strong>, counted from the data in this app: of all " + fmt(w.total) + " words in Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, and Galatians, <strong>" + fmt(w.translated) + "</strong> carry a translation in their verse, <strong>" + fmt(w.defined) + "</strong> carry a definition, <strong>" + fmt(w.withSyn) + "</strong> open a panel with a Synonyms &amp; related words section, and <strong>" + fmt(w.withRel) + "</strong> have original-language related words supported by Strong's own derivation and comparison fields. Where a word has no honest English synonym — “God”, and most names — its panel says so plainly rather than inventing one.</p>" +
+          hebPara("Deuteronomy", cdeu) +
+          "<p><strong>Word study coverage</strong>, counted from the data in this app: of all " + fmt(w.total) + " words in Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, Deuteronomy, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, and Hebrews, <strong>" + fmt(w.translated) + "</strong> carry a translation in their verse, <strong>" + fmt(w.defined) + "</strong> carry a definition, <strong>" + fmt(w.withSyn) + "</strong> open a panel with a Synonyms &amp; related words section, and <strong>" + fmt(w.withRel) + "</strong> have original-language related words supported by Strong's own derivation and comparison fields. Where a word has no honest English synonym — “God”, and most names — its panel says so plainly rather than inventing one.</p>" +
           "<p>Greek definitions are deepened from <strong>Thayer's Greek-English Lexicon (1889)</strong> wherever its text could be matched to the word with confidence from the public-domain scan: <strong>" + fmt(Object.keys(window.SB_THAYER || {}).length) + "</strong> Greek dictionary entries carry Thayer's fuller treatment in their panels, alongside Strong's. The rest keep Strong's definition alone — a partial match, honestly counted, rather than a wrong attribution.</p>";
       }
 
       function sourcesHTML() {
         return '<div class="card sources" id="sources"><h2 style="margin-top:0.2rem">Sources &amp; credits</h2>' +
           "<p>Everything in this app is <strong>public domain</strong>. Each source below names the basis of its status.</p>" +
-          '<p><span class="src-name">Greek text, Strong\'s numbers &amp; parsings of John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, and Galatians</span> — <em>The New Testament in the Original Greek: Byzantine Textform 2018</em>, compiled by Maurice A. Robinson and William G. Pierpont. Public domain by the editors\' own dedication: the printed editions release all rights in the text to everyone, and the official data repository (github.com/byztxt/byzantine-majority-text), from which this text was taken, is released under the Unlicense.</p>' +
+          '<p><span class="src-name">Greek text, Strong\'s numbers &amp; parsings of John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, and Hebrews</span> — <em>The New Testament in the Original Greek: Byzantine Textform 2018</em>, compiled by Maurice A. Robinson and William G. Pierpont. Public domain by the editors\' own dedication: the printed editions release all rights in the text to everyone, and the official data repository (github.com/byztxt/byzantine-majority-text), from which this text was taken, is released under the Unlicense.</p>' +
           '<p><span class="src-name">Greek dictionary</span> — <em>Strong\'s Greek Dictionary</em>, James Strong, 1890. Public domain by age. Supplies each word\'s dictionary form, definition, word origin, and the list of King James renderings from which the gloss under each word is chosen. E-text prepared by Ulrik Petersen (openscriptures/strongs).</p>' +
           '<p><span class="src-name">Greek dictionary (Thayer)</span> — <em>A Greek-English Lexicon of the New Testament</em>, Joseph Henry Thayer, Harper &amp; Brothers, 1889. Public domain by age. Strong\'s definitions are brief; where Thayer\'s fuller treatment of a word could be matched to it with confidence, the word\'s panel shows it under “Definition — Thayer\'s lexicon (1889)” in Thayer\'s own words, lightly re-flowed from the printed page, with Strong\'s definition kept above it. Text taken from the Internet Archive\'s scan of the 1889 edition (item agreekenglishle00wilkgoog) and keyed to Strong\'s numbers by dictionary form. The match is partial — <strong>' + fmt(Object.keys(window.SB_THAYER || {}).length) + '</strong> Greek entries carry Thayer\'s treatment, counted from the data in this app — and where the scan\'s text could not be matched confidently, no Thayer text is shown rather than risk a wrong attribution.</p>' +
-          '<p><span class="src-name">Hebrew text of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, and Isaiah</span> — the <em>Westminster Leningrad Codex</em>, the electronic text of the Leningrad Codex (written about AD 1008), maintained by the J. Alan Groves Center. Public domain; Genesis\'s text was taken from the CrossWire Bible Society\'s module, which distributes it as public domain, and Exodus\'s, Ruth\'s, Jonah\'s, Proverbs\', Psalms\', and Isaiah\'s from the same codex in its Unicode/XML edition (the tanach.us edition, prepared by C. V. Kimball from the Westminster Leningrad Codex) — the editions were checked against each other on Genesis before Exodus, Ruth, Jonah, Proverbs, Psalms, and Isaiah were built from it.</p>' +
+          '<p><span class="src-name">Hebrew text of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, and Deuteronomy</span> — the <em>Westminster Leningrad Codex</em>, the electronic text of the Leningrad Codex (written about AD 1008), maintained by the J. Alan Groves Center. Public domain; Genesis\'s text was taken from the CrossWire Bible Society\'s module, which distributes it as public domain, and Exodus\'s, Ruth\'s, Jonah\'s, Proverbs\', Psalms\', Isaiah\'s, and Deuteronomy\'s from the same codex in its Unicode/XML edition (the tanach.us edition, prepared by C. V. Kimball from the Westminster Leningrad Codex) — the editions were checked against each other on Genesis before Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, and Deuteronomy were built from it.</p>' +
           '<p><span class="src-name">Hebrew dictionary (Strong\'s)</span> — <em>Strong\'s Hebrew Dictionary</em>, James Strong, 1890. Public domain by age. Supplies each Hebrew word\'s dictionary form, transliteration, definition, and King James renderings. E-text from the OpenScriptures Strong\'s collection (github.com/openscriptures/strongs), whose own header declares the work public domain; before use, the e-text was checked entry by entry — all 8,674 entries, H1 to H8674, present and accounted for.</p>' +
           '<p><span class="src-name">Hebrew dictionary (BDB)</span> — <em>A Hebrew and English Lexicon of the Old Testament</em>, Francis Brown, S. R. Driver, and Charles A. Briggs (Brown-Driver-Briggs), Clarendon Press, 1906. Public domain by age. Supplies the meaning range shown in each Hebrew word\'s panel — BDB\'s own sense divisions, drawn from its entry structure. Full text consulted from the public-domain scan at the Internet Archive (item ahebrewandengli00briggoog).</p>' +
-          '<p><span class="src-name">Hebrew word tagging of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, and Isaiah</span> — our own work, made for this app: the segmentation of each word (its prefixes, core, and pronoun endings), the literal gloss under it, and its parsing were built here from the two lexicons above, word by word, and checked against them. No Creative Commons data and no modern tagged-Hebrew dataset was used. Where a word\'s identity could not be settled from those lexicons, it is left untagged rather than guessed; the coverage note above counts those words exactly.</p>' +
+          '<p><span class="src-name">Hebrew word tagging of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, and Deuteronomy</span> — our own work, made for this app: the segmentation of each word (its prefixes, core, and pronoun endings), the literal gloss under it, and its parsing were built here from the two lexicons above, word by word, and checked against them. No Creative Commons data and no modern tagged-Hebrew dataset was used. Where a word\'s identity could not be settled from those lexicons, it is left untagged rather than guessed; the coverage note above counts those words exactly.</p>' +
           '<p><span class="src-name">English verses</span> — the <em>World English Bible</em>, public domain (eBible.org; translation led by Michael Paul Johnson). The WEB is a complete translation printed under each verse; it is not the source of the word-by-word translations.</p>' +
           '<p><span class="src-name">Word translations &amp; synonyms</span> — our own editorial work, made for this app. Each word\'s translation in its verse was derived from its word tagging, its parsing, and the WEB verse as context control, so a verb reads as the action it performs in the verse. The English synonyms are ordinary near-equivalents written here for each word\'s sense in its verse — not copied from any modern thesaurus or any copyrighted or Creative Commons synonym database. Related Greek and Hebrew words are shown only where Strong\'s own derivation and comparison fields support the relation; where the sources support none, that part is simply omitted.</p>' +
           '<p><span class="src-name">Made here</span> — the transliterations and the plain-English wording of the parsings are generated by this app\'s own code from the sources above. The counts of a word\'s occurrences are counted from the text of the books included in this app, and say so.</p>' +
-          '<p class="small muted">In Genesis 32 the Hebrew chapter numbering runs one verse ahead of English Bibles (Hebrew 32:1 is English 31:55). Exodus has the same kind of shift in four places: Hebrew 7:26–29 is English 8:1–4 (so Hebrew chapter 8 is English 8:5–32), Hebrew 21:37 is English 22:1, and Hebrew chapter 22 is English 22:2–31. Jonah has one too: Hebrew Jonah 2:1 is English Jonah 1:17, and Hebrew chapter 2 runs one verse ahead of English Bibles through that chapter (Hebrew 2:2–11 is English 2:1–10). Affected verses are labeled with their World English Bible reference so the two never get mixed up. Psalms carries the same kind of difference through much of the book: in 62 psalms the Hebrew counts the psalm\'s title as verse 1 — in Psalms 51, 52, 54, and 60 as verses 1–2 — so the Hebrew verse numbers run ahead of the WEB\'s there. Psalms in this app keeps the WEB\'s verse numbers, with every Hebrew word placed in the WEB verse it belongs to and the title\'s words at the head of verse 1, where the WEB prints them; each affected psalm says so at its head. Isaiah has two seams of its own: the Hebrew\'s 8:23 is the WEB\'s 9:1, so its chapter 9 runs one verse behind the WEB\'s, and the Hebrew counts the WEB\'s 64:1 as the end of 63:19, so its chapter 64 runs one verse behind too. Isaiah in this app keeps the WEB\'s verse numbers, with every Hebrew word placed in the WEB verse it belongs to, and chapters 9 and 64 say so at their heads.</p></div>';
+          '<p class="small muted">In Genesis 32 the Hebrew chapter numbering runs one verse ahead of English Bibles (Hebrew 32:1 is English 31:55). Exodus has the same kind of shift in four places: Hebrew 7:26–29 is English 8:1–4 (so Hebrew chapter 8 is English 8:5–32), Hebrew 21:37 is English 22:1, and Hebrew chapter 22 is English 22:2–31. Jonah has one too: Hebrew Jonah 2:1 is English Jonah 1:17, and Hebrew chapter 2 runs one verse ahead of English Bibles through that chapter (Hebrew 2:2–11 is English 2:1–10). Affected verses are labeled with their World English Bible reference so the two never get mixed up. Psalms carries the same kind of difference through much of the book: in 62 psalms the Hebrew counts the psalm\'s title as verse 1 — in Psalms 51, 52, 54, and 60 as verses 1–2 — so the Hebrew verse numbers run ahead of the WEB\'s there. Psalms in this app keeps the WEB\'s verse numbers, with every Hebrew word placed in the WEB verse it belongs to and the title\'s words at the head of verse 1, where the WEB prints them; each affected psalm says so at its head. Isaiah has two seams of its own: the Hebrew\'s 8:23 is the WEB\'s 9:1, so its chapter 9 runs one verse behind the WEB\'s, and the Hebrew counts the WEB\'s 64:1 as the end of 63:19, so its chapter 64 runs one verse behind too. Isaiah in this app keeps the WEB\'s verse numbers, with every Hebrew word placed in the WEB verse it belongs to, and chapters 9 and 64 say so at their heads. Deuteronomy has three seams of the same kind: the Hebrew\'s 13:1 is the WEB\'s 12:32, its 23:1 is the WEB\'s 22:30, and its 28:69 is the WEB\'s 29:1, so in chapters 13, 23, and 29 the Hebrew runs one verse behind the WEB\'s. Deuteronomy in this app keeps the WEB\'s verse numbers, with every Hebrew word placed in the WEB verse it belongs to, and chapters 12, 13, 22, 23, 28, and 29 say so at their heads.</p></div>';
       }
 
       function renderBook(b) {
@@ -1468,6 +1477,8 @@
           ? "<p class='reader-note'>Hebrew reads right to left. Proverbs' verse numbering matches the World English Bible's verse for verse. Where the read form (Qere) differs from the written form (Ketiv), the read form is printed, as the Westminster Leningrad Codex presents it, and the word's panel says so.</p>"
           : b.id === "isaiah"
           ? "<p class='reader-note'>Hebrew reads right to left. Isaiah's verse numbering matches the World English Bible's except at two seams: the Hebrew's 8:23 stands here as 9:1, so its chapter 9 runs one verse behind the WEB's through that chapter, and the Hebrew counts the WEB's 64:1 as the end of 63:19, so its chapter 64 runs one verse behind too. This book keeps the WEB's verse numbers, and every Hebrew word stands in the WEB verse it belongs to; chapters 9 and 64 say so at their heads. Where the read form (Qere) differs from the written form (Ketiv), the read form is printed, as the Westminster Leningrad Codex presents it, and the word's panel says so.</p>"
+          : b.id === "deuteronomy"
+          ? "<p class='reader-note'>Hebrew reads right to left. Deuteronomy's verse numbering matches the World English Bible's except at three chapter seams: the Hebrew's 13:1 stands here as 12:32, its 23:1 as 22:30, and its 28:69 as 29:1, so in chapters 13, 23, and 29 the Hebrew runs one verse behind the WEB's. This book keeps the WEB's verse numbers, and every Hebrew word stands in the WEB verse it belongs to; each affected chapter says so at its head. Where the read form (Qere) differs from the written form (Ketiv), the read form is printed, as the Westminster Leningrad Codex presents it, and the word's panel says so.</p>"
           : b.id === "psalms"
           ? "<p class='reader-note'>Hebrew reads right to left. One numbering difference runs through this book: in many psalms the Hebrew counts the psalm's title (its superscription — “A Psalm by David”, “For the Chief Musician”, and the like) as verse 1, sometimes as verses 1–2, where the World English Bible prints the title unnumbered above verse 1. In those psalms the Hebrew verse numbers run one or two ahead of the WEB's. This book keeps the WEB's verse numbers, and every Hebrew word stands in the WEB verse it belongs to — the title's words at the head of verse 1, where the WEB prints them — and the head of each affected psalm says so. Where the read form (Qere) differs from the written form (Ketiv), the read form is printed, as the Westminster Leningrad Codex presents it, and the word's panel says so.</p>"
           : "<p class='reader-note'>Greek reads left to right, exactly as printed in the Byzantine Textform.</p>";
@@ -1770,7 +1781,7 @@
           html += greekOccSections(occAll, occ, strong);
         } else {
           html += "<h3>Occurrences</h3>";
-          html += "<p>This word does not occur in John, Mark, Luke, 1 John, Acts, James, Matthew, or Romans; it is here because Strong's dictionary connects it with a word that does.</p>";
+          html += "<p>This word does not occur in John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, or Hebrews; it is here because Strong's dictionary connects it with a word that does.</p>";
         }
         openSheet(html);
         document.getElementById("sheet-close").addEventListener("click", closeSheet);
