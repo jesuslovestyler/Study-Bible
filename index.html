@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="app-build" content="2026-10-22.24" />
+    <meta name="app-build" content="2026-10-22.25" />
     <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, Deuteronomy, Job, Jeremiah, Daniel, Ezekiel, Leviticus, Esther, Numbers, Micah, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, Hebrews, 1 Corinthians, 2 Corinthians, Revelation, Ephesians, Philippians, 1 Peter, Colossians, and 2 Peter word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16171b" />
@@ -342,7 +342,7 @@
 
       /* ================= build stamp & update check ================= */
       /* Kept character-for-character identical to the <meta name="app-build"> tag in <head>. */
-      var APP_BUILD_STAMP = "2026-10-22.24";
+      var APP_BUILD_STAMP = "2026-10-22.25";
       function runningStamp() {
         var m = document.querySelector('meta[name="app-build"]');
         return (m && m.getAttribute("content")) || APP_BUILD_STAMP;
@@ -1327,7 +1327,7 @@
           related.forEach(function (r) {
             var wordHtml = langLabel === "Greek"
               ? '<button data-rel="' + r.strong + '">' + esc(r.word) + "</button>"
-              : '<span class="heb">' + esc(r.word) + "</span>";
+              : '<button class="heb" data-relheb="' + r.strong + '">' + esc(r.word) + "</button>";
             h += '<p class="rel-item">' + wordHtml + " <span class='muted'>" + esc(r.trans) + " · " + (langLabel === "Greek" ? "G" : "H") + r.strong + "</span> — " + esc(r.note) + ' <span class="small muted">(' + esc(r.kind) + ")</span></p>";
           });
         }
@@ -1926,6 +1926,7 @@
         if (he) {
           html += "<h3>Dictionary form</h3>";
           html += '<p class="lemma-line"><strong class="heb">' + esc(he.l) + "</strong> · " + esc(he.t) + ' · <span class="muted">Strong\'s H' + tag.n + "</span></p>";
+          html += '<p class="rel-item"><button data-heblemma="' + tag.n + '">Open the dictionary entry — <span class="heb">' + esc(he.l) + "</span> · Strong's H" + tag.n + "</button></p>";
           if (tag.p) { html += "<h3>Parsing</h3><p>" + esc(tag.p) + "</p>"; }
           if (he.o) { html += "<h3>Word origin — Strong's</h3><p>" + esc(he.o) + "</p>"; }
           if (he.k && he.k.length) {
@@ -1954,6 +1955,62 @@
         openSheet(html);
         document.getElementById("sheet-close").addEventListener("click", closeSheet);
         wireHear(w[0], "he-IL", hebLemma);
+        sheet.querySelectorAll("[data-heblemma], [data-relheb]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var n = parseInt(btn.getAttribute("data-heblemma") || btn.getAttribute("data-relheb"), 10);
+            openHebrewLemma(n, b.id, (tag && tag.lang === "arc") ? "Aramaic" : "Hebrew");
+          });
+        });
+        wireOccButtons();
+      }
+
+      /* The Hebrew dictionary entry as its own sheet — the same tappable
+         destination Greek words have always had. Every linked Hebrew word's
+         panel carries an "Open the dictionary entry" button to here,
+         including the decomposition links (a preposition piece such as
+         מִן, H4480, inside a fused form): the link is present and tappable
+         wherever the word's tagging carries a Strong's number with a real
+         entry behind it. */
+      function openHebrewLemma(strong, bookId, langLabel) {
+        var e = LEXHEB[String(strong)];
+        if (!e) return;
+        var bk = bookId ? BOOKMAP[bookId] : null;
+        var label = langLabel || "Hebrew";
+        var html = '<button class="close" id="sheet-close" aria-label="Close">✕</button>';
+        html += '<div class="s-ref">Word study · ' + esc(label) + "</div>";
+        html += '<div class="s-word heb" dir="rtl" style="text-align:right">' + esc(e.l) + "</div>";
+        html += '<div class="s-trans">' + esc(e.t) + ' · Strong\'s H' + strong + "</div>";
+        html += hearRowHTML(e.l, "he-IL", null);
+        if (e.d) { html += "<h3>Definition — Strong's (1890)</h3><p>" + esc(e.d) + "</p>"; }
+        if (e.b && e.b.length) {
+          html += "<h3>Meaning range — Brown-Driver-Briggs (1906)</h3>";
+          e.b.forEach(function (s) { html += "<p>" + esc(s) + "</p>"; });
+          html += '<p class="small muted">BDB\'s sense divisions for this entry, in its own words (spelling as printed in 1906).</p>';
+        }
+        var pseudoTag = { n: strong };
+        html += synonymsHTML(hebrewSynonyms(pseudoTag, ""), hebrewRelated(pseudoTag), label);
+        if (e.o) { html += "<h3>Word origin — Strong's</h3><p>" + esc(e.o) + "</p>"; }
+        if (e.k && e.k.length) {
+          html += "<h3>How the King James Bible renders it (Strong's list)</h3><div class='chips'>" +
+            e.k.map(function (g) { return '<span class="chip">' + esc(g) + "</span>"; }).join("") + "</div>";
+        }
+        if (bk) {
+          var loccAll = hebrewLemmaOcc(bookId)[strong] || [];
+          var locc = dedupeRefs(loccAll);
+          html += "<h3>This dictionary word in " + esc(bk.name) + "</h3>";
+          if (loccAll.length) {
+            html += "<p>Counting every form of it that this app's tagging has identified, it appears <strong>" + loccAll.length + "</strong> time" + (loccAll.length === 1 ? "" : "s") + " in " + esc(bk.name) + ".</p>";
+            html += '<div class="occ-list">' + occButtons(bookId, locc, strong) + "</div>";
+          } else {
+            html += "<p>This dictionary word does not itself occur in " + esc(bk.name) + "; it is here because Strong's dictionary connects it with a word that does.</p>";
+          }
+        }
+        openSheet(html);
+        document.getElementById("sheet-close").addEventListener("click", closeSheet);
+        wireHear(e.l, "he-IL", null);
+        sheet.querySelectorAll("[data-relheb]").forEach(function (btn) {
+          btn.addEventListener("click", function () { openHebrewLemma(parseInt(btn.getAttribute("data-relheb"), 10), bookId, label); });
+        });
         wireOccButtons();
       }
 
