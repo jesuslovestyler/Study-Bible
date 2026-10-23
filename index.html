@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="app-build" content="2026-10-22.26" />
+    <meta name="app-build" content="2026-10-22.27" />
     <meta name="description" content="A study Bible in the Bible's own words: the Greek and Hebrew text of Genesis, Exodus, Ruth, Jonah, Proverbs, Psalms, Isaiah, Deuteronomy, Job, Jeremiah, Daniel, Ezekiel, Leviticus, Esther, Numbers, Micah, Joshua, John, Mark, Luke, 1 John, Acts, James, Matthew, Romans, Galatians, Hebrews, 1 Corinthians, 2 Corinthians, Revelation, Ephesians, Philippians, 1 Peter, Colossians, 2 Peter, and 1 Thessalonians word by word — a translation of every word in its verse, a definition, synonyms and related words, and pronunciation — built only from public-domain sources." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16171b" />
@@ -237,6 +237,36 @@
         padding: 0.42rem 0.8rem; font-size: 0.92rem;
       }
 
+      /* ------- word search ------- */
+      .top-search { display: flex; gap: 0.35rem; align-items: center; }
+      .top-search input {
+        width: 8.2rem; padding: 0.3rem 0.65rem; border-radius: 999px;
+        border: 1px solid var(--line); background: var(--surface2); color: var(--ink);
+        font-family: inherit; font-size: 0.92rem;
+      }
+      .top-search button {
+        font-weight: 700; color: var(--accent); border: 1px solid var(--accent);
+        border-radius: 999px; padding: 0.28rem 0.7rem; background: var(--surface2);
+        cursor: pointer; white-space: nowrap; font-size: 0.92rem;
+      }
+      @media (max-width: 620px) { .top-search input { width: 6.8rem; } }
+      .search-form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.65rem 0 0.3rem; }
+      .search-form input {
+        flex: 1 1 210px; padding: 0.55rem 0.85rem; font-size: 1.05rem; font-family: inherit;
+        border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink);
+      }
+      .search-form button {
+        border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+        border-radius: 999px; padding: 0.55rem 1.1rem; font-size: 1rem; cursor: pointer; font-weight: 700;
+      }
+      .result-word { font-size: 1.65rem; line-height: 1.25; }
+      .result-word.heb { font-family: "Noto Serif Hebrew", serif; }
+      .result-meta { color: var(--muted); margin-top: 0.15rem; }
+      .noentry {
+        display: inline-block; border: 1px solid var(--line); background: var(--surface2);
+        border-radius: 999px; padding: 0.12rem 0.6rem; font-size: 0.85rem; color: var(--muted);
+      }
+
       /* ------- update check ------- */
       .upd-btn {
         border: 1px solid var(--line); background: var(--surface2); color: var(--ink);
@@ -262,6 +292,10 @@
       <a class="home-link" href="https://jesuslovestyler.com/">⌂ Home</a>
       <span class="brand">Study Bible</span>
       <span class="spacer"></span>
+      <form class="top-search" id="top-search" role="search">
+        <input type="search" id="top-search-q" placeholder="Search a word…" aria-label="Search for a word" />
+        <button type="submit">Search</button>
+      </form>
       <a class="books-btn" href="#/" aria-label="Back to the books dashboard">📖 Books</a>
       <button class="upd-btn" id="upd-btn-top" type="button">↻ Updates</button>
       <a href="#/sources" style="font-size:0.95rem;">Sources &amp; credits</a>
@@ -345,7 +379,7 @@
 
       /* ================= build stamp & update check ================= */
       /* Kept character-for-character identical to the <meta name="app-build"> tag in <head>. */
-      var APP_BUILD_STAMP = "2026-10-22.26";
+      var APP_BUILD_STAMP = "2026-10-22.27";
       function runningStamp() {
         var m = document.querySelector('meta[name="app-build"]');
         return (m && m.getAttribute("content")) || APP_BUILD_STAMP;
@@ -729,6 +763,359 @@
         var seen = {}, out = [];
         refs.forEach(function (r) { var k = r.join(":"); if (!seen[k]) { seen[k] = 1; out.push(r); } });
         return out;
+      }
+
+      /* ================= word search =================
+         The index is built at runtime, on first use, from the book data and
+         the two lexicons already loaded — no data file is re-shaped.
+         Greek matching is accent-insensitive, by dictionary word (lemma)
+         and by written form. Hebrew matching strips cantillation and vowel
+         points with the same helpers the panels use. Hebrew dictionary-word
+         occurrences are aggregated across ALL the Hebrew and Aramaic books
+         in this app (the word panels list them one book at a time; search
+         lifts that limit). */
+      function normGrk(s) {
+        return String(s || "").normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .toLowerCase().replace(/ς/g, "σ")
+          .replace(/[^α-ω]/g, "");
+      }
+      function normHeb(s) {
+        return String(s || "")
+          .replace(/[֑-ֽֿׁׂ׀־׃׀]/g, "")
+          .replace(/ך/g, "כ").replace(/ם/g, "מ").replace(/ן/g, "נ").replace(/ף/g, "פ").replace(/ץ/g, "צ")
+          .replace(/[^א-ת]/g, "");
+      }
+      function normLat(s) {
+        return String(s || "").normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .toLowerCase()
+          .replace(/[ʼ'’`ʾʿ]/g, "")
+          .replace(/[^a-z0-9]+/g, " ")
+          .replace(/\s+/g, " ").trim();
+      }
+      function engVariants(nq) {
+        var out = [nq];
+        if (/ed$/.test(nq)) { out.push(nq.slice(0, -2)); out.push(nq.slice(0, -1)); out.push(nq.slice(0, -2) + "e"); }
+        if (/ing$/.test(nq)) { out.push(nq.slice(0, -3)); out.push(nq.slice(0, -3) + "e"); }
+        if (/s$/.test(nq) && nq.length > 3) out.push(nq.slice(0, -1));
+        if (/es$/.test(nq)) out.push(nq.slice(0, -2));
+        return out;
+      }
+      function engHit(nq, text) {
+        var nt = normLat(text);
+        if (!nt) return false;
+        var vars = engVariants(nq);
+        if (vars.indexOf(nt) >= 0) return true;
+        /* token match, stemmed both ways: "love" meets "loved", and
+           "created" meets "create" */
+        var toks = nt.split(" ");
+        for (var i = 0; i < toks.length; i++) {
+          if (vars.indexOf(toks[i]) >= 0) return true;
+          var tv = engVariants(toks[i]);
+          for (var j = 0; j < vars.length; j++) { if (tv.indexOf(vars[j]) >= 0) return true; }
+        }
+        return false;
+      }
+
+      var searchIdx = null;
+      function buildSearchIndex() {
+        if (searchIdx) return searchIdx;
+        var idx = { grkForms: {}, hebFormStrong: {}, hebFused: {}, hebLemmaAll: {}, grkGlossTop: {}, hebGlossTop: {} };
+        function topGloss(map, strong, gloss) {
+          var g = normLat(gloss);
+          if (!g) return;
+          var m = map[strong] = map[strong] || {};
+          m[g] = (m[g] || 0) + 1;
+        }
+        function finishTopGloss(map) {
+          Object.keys(map).forEach(function (s) {
+            var best = "", bn = -1;
+            Object.keys(map[s]).forEach(function (g) { if (map[s][g] > bn) { bn = map[s][g]; best = g; } });
+            map[s] = best;
+          });
+        }
+        BOOKS.forEach(function (b) {
+          if (b.lang === "grc") {
+            b.chapters.forEach(function (chap) {
+              chap.forEach(function (v) {
+                v.w.forEach(function (w) {
+                  var k = normGrk(w[0]);
+                  if (!k) return;
+                  var set = idx.grkForms[k] = idx.grkForms[k] || {};
+                  set[w[1]] = 1;
+                  topGloss(idx.grkGlossTop, w[1], w[3] || "");
+                });
+              });
+            });
+          } else {
+            b.chapters.forEach(function (chap, ci) {
+              chap.forEach(function (v) {
+                v.w.forEach(function (w) {
+                  var tag = hebTagFor(b.id, ci + 1, v.v, w[0]);
+                  if (tag && tag.n) {
+                    (idx.hebLemmaAll[tag.n] = idx.hebLemmaAll[tag.n] || []).push([b.id, ci + 1, v.v]);
+                    topGloss(idx.hebGlossTop, tag.n, hebTranslation(tag, w[0]));
+                    var sk = normHeb(w[0]);
+                    if (sk) { var st = idx.hebFormStrong[sk] = idx.hebFormStrong[sk] || {}; st[tag.n] = 1; }
+                  } else if (tag) {
+                    /* a written form with a tagging but no Strong's number of
+                       its own — a fused form (preposition + pronoun, and its
+                       kin). It stays findable by its written form and its
+                       gloss, and is shown as a form, never given a link. */
+                    var sk2 = normHeb(w[0]);
+                    if (!sk2) return;
+                    var key = sk2 + "|" + normLat(hebTranslation(tag, w[0]));
+                    var fe = idx.hebFused[key];
+                    if (!fe) {
+                      fe = idx.hebFused[key] = { form: w[0], gloss: hebTranslation(tag, w[0]), parsing: tag.p || "", pieces: tag.s || [], refs: [] };
+                    }
+                    fe.refs.push([b.id, ci + 1, v.v]);
+                  }
+                });
+              });
+            });
+          }
+        });
+        finishTopGloss(idx.grkGlossTop);
+        finishTopGloss(idx.hebGlossTop);
+        searchIdx = idx;
+        return idx;
+      }
+      function hebrewLemmaOccAll() { return buildSearchIndex().hebLemmaAll; }
+
+      function doSearch(raw) {
+        var q = String(raw || "").trim();
+        if (!q) return [];
+        var idx = buildSearchIndex();
+        var results = [], seen = {};
+        function addGrk(strong, score) {
+          var k = "g" + strong;
+          if (seen[k]) { if (score > seen[k].score) seen[k].score = score; return; }
+          var r = { type: "grk", strong: strong, score: score };
+          seen[k] = r; results.push(r);
+        }
+        function addHeb(strong, score) {
+          var k = "h" + strong;
+          if (seen[k]) { if (score > seen[k].score) seen[k].score = score; return; }
+          var r = { type: "heb", strong: strong, score: score };
+          seen[k] = r; results.push(r);
+        }
+        function addForm(key, score) {
+          var k = "f" + key;
+          if (seen[k]) return;
+          var r = { type: "form", key: key, score: score };
+          seen[k] = r; results.push(r);
+        }
+        /* (d) a Strong's number typed directly: G3056, H1254, or a bare number */
+        var sm = q.match(/^([GgHh])\s*0*(\d{1,5})$/);
+        if (sm) {
+          var num = parseInt(sm[2], 10);
+          if (sm[1].toUpperCase() === "G" && LEX[String(num)]) addGrk(num, 1000);
+          if (sm[1].toUpperCase() === "H" && LEXHEB[String(num)]) addHeb(num, 1000);
+          return results;
+        }
+        if (/^\d{1,5}$/.test(q)) {
+          var bn = parseInt(q, 10);
+          if (LEX[String(bn)]) addGrk(bn, 1000);
+          if (LEXHEB[String(bn)]) addHeb(bn, 1000);
+          return results;
+        }
+        var hasGrk = /[Ͱ-Ͽἀ-῿]/.test(q);
+        var hasHeb = /[֐-׿]/.test(q);
+        if (hasGrk) {
+          var nq = normGrk(q);
+          if (nq) {
+            Object.keys(LEX).forEach(function (k) {
+              if (normGrk(LEX[k].l) === nq) addGrk(parseInt(k, 10), 100);
+            });
+            var fs = idx.grkForms[nq];
+            if (fs) Object.keys(fs).forEach(function (s) { addGrk(parseInt(s, 10), 90); });
+            if (!results.length && nq.length >= 2) {
+              Object.keys(LEX).forEach(function (k) {
+                if (normGrk(LEX[k].l).indexOf(nq) === 0) addGrk(parseInt(k, 10), 40);
+              });
+            }
+          }
+          return sortSearchResults(results);
+        }
+        if (hasHeb) {
+          var nh = normHeb(q);
+          if (nh) {
+            Object.keys(LEXHEB).forEach(function (k) {
+              if (normHeb(LEXHEB[k].l) === nh) addHeb(parseInt(k, 10), 100);
+            });
+            var hs = idx.hebFormStrong[nh];
+            if (hs) Object.keys(hs).forEach(function (s) { addHeb(parseInt(s, 10), 90); });
+            Object.keys(idx.hebFused).forEach(function (key) {
+              if (key.split("|")[0] === nh) addForm(key, 95);
+            });
+            if (!results.length && nh.length >= 2) {
+              Object.keys(LEXHEB).forEach(function (k) {
+                if (normHeb(LEXHEB[k].l).indexOf(nh) === 0) addHeb(parseInt(k, 10), 40);
+              });
+            }
+          }
+          return sortSearchResults(results);
+        }
+        /* Latin letters: a transliteration, or an English word or gloss */
+        var nl = normLat(q);
+        if (!nl) return [];
+        var gOcc = greekOcc();
+        Object.keys(LEX).forEach(function (k) {
+          var e = LEX[k], strong = parseInt(k, 10);
+          if (!(gOcc[strong] || []).length) return; /* search finds words that occur in this app */
+          var score = 0;
+          if (normLat(e.t) === nl || normLat(grcTranslit(e.l)) === nl) score = 100;
+          else if (nl.length >= 3 && (normLat(e.t).indexOf(nl) === 0 || normLat(grcTranslit(e.l)).indexOf(nl) === 0)) score = 40;
+          (e.g || []).forEach(function (r) {
+            if (normLat(r) === nl) score = Math.max(score, 90);
+            else if (engHit(nl, r)) score = Math.max(score, 80);
+          });
+          /* the English this app itself most often gives the word in its
+             verses is its primary sense here — it outranks a stray
+             rendering buried in Strong's list */
+          var gt = idx.grkGlossTop[strong];
+          if (gt && (gt === nl || engHit(nl, gt))) score = Math.max(score, 95);
+          if (!score && engHit(nl, e.d || "")) score = 30;
+          if (score) addGrk(strong, score);
+        });
+        var hOcc = idx.hebLemmaAll;
+        Object.keys(LEXHEB).forEach(function (k) {
+          var e = LEXHEB[k], strong = parseInt(k, 10);
+          if (!(hOcc[strong] || []).length) return;
+          var score = 0;
+          if (normLat(e.t) === nl || normLat(hebTranslit(e.l)) === nl) score = 100;
+          else if (nl.length >= 3 && (normLat(e.t).indexOf(nl) === 0 || normLat(hebTranslit(e.l)).indexOf(nl) === 0)) score = 40;
+          (e.k || []).forEach(function (r) {
+            if (normLat(r) === nl) score = Math.max(score, 90);
+            else if (engHit(nl, r)) score = Math.max(score, 80);
+          });
+          var ht = idx.hebGlossTop[strong];
+          if (ht && (ht === nl || engHit(nl, ht))) score = Math.max(score, 95);
+          if (!score && engHit(nl, e.d || "")) score = 30;
+          if (!score && (e.b || []).some(function (s) { return engHit(nl, s); })) score = 25;
+          if (score) addHeb(strong, score);
+        });
+        Object.keys(idx.hebFused).forEach(function (key) {
+          var fe = idx.hebFused[key];
+          if (normLat(fe.gloss) === nl || normLat(fe.gloss.replace(/-/g, " ")) === nl || normLat(hebTranslit(fe.form)) === nl) addForm(key, 85);
+          else if (engHit(nl, fe.gloss.replace(/-/g, " "))) addForm(key, 70);
+        });
+        return sortSearchResults(results).slice(0, 40);
+      }
+      function searchOccCount(r) {
+        if (r.type === "grk") return (greekOcc()[r.strong] || []).length;
+        if (r.type === "heb") return (hebrewLemmaOccAll()[r.strong] || []).length;
+        var fe = buildSearchIndex().hebFused[r.key];
+        return fe ? fe.refs.length : 0;
+      }
+      function sortSearchResults(results) {
+        return results.sort(function (a, b) {
+          if (b.score !== a.score) return b.score - a.score;
+          return searchOccCount(b) - searchOccCount(a);
+        });
+      }
+      function occByBookHTML(refsAll, strong) {
+        var html = "";
+        BOOKS.forEach(function (bk) {
+          var refs = refsAll.filter(function (r) { return r[0] === bk.id; });
+          if (!refs.length) return;
+          var pairs = dedupeRefs(refs.map(function (r) { return [r[1], r[2]]; }));
+          html += "<h3>Occurrences in " + esc(bk.name) + "</h3>";
+          html += "<p>This word appears <strong>" + refs.length + "</strong> time" + (refs.length === 1 ? "" : "s") + " in " + esc(bk.name) + " (counted from the text in this app).</p>";
+          html += '<div class="occ-list">' + occButtons(bk.id, pairs, strong) + "</div>";
+        });
+        return html;
+      }
+      function searchFormHTML(idSuffix, q) {
+        return '<form class="search-form" id="search-form-' + idSuffix + '" role="search">' +
+          '<input type="search" id="search-q-' + idSuffix + '" placeholder="Try λόγος, logos, love, bara, or H1254" aria-label="Search for a word" value="' + esc(q || "") + '" />' +
+          '<button type="submit">Search</button></form>' +
+          '<p class="small muted">Searches the thirty-six books in this app. Type a word in Greek or Hebrew letters (accents and vowel points optional), a transliteration like <em>logos</em> or <em>bara</em>, an English word like <em>love</em>, or a Strong\'s number like <em>G3056</em> or <em>H1254</em>, then press Enter or tap Search.</p>';
+      }
+      function wireSearchForm(idSuffix) {
+        var f = document.getElementById("search-form-" + idSuffix);
+        if (!f) return;
+        f.addEventListener("submit", function (ev) {
+          ev.preventDefault();
+          goSearch(document.getElementById("search-q-" + idSuffix).value);
+        });
+      }
+      function goSearch(q) {
+        q = String(q || "").trim();
+        if (!q) return;
+        var target = "#/search/" + encodeURIComponent(q);
+        if (location.hash === target) render();
+        else location.hash = target;
+      }
+      function wirePageOccButtons() {
+        view.querySelectorAll(".occ").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            pendingHl = {
+              book: btn.getAttribute("data-book"),
+              ch: parseInt(btn.getAttribute("data-ch"), 10),
+              v: parseInt(btn.getAttribute("data-v"), 10),
+              strong: btn.getAttribute("data-strong") ? parseInt(btn.getAttribute("data-strong"), 10) : null
+            };
+            location.hash = "#/" + pendingHl.book + "/" + pendingHl.ch;
+            if (current.book === pendingHl.book && current.ch === pendingHl.ch) render();
+          });
+        });
+      }
+      function renderSearch(query) {
+        closeSheet();
+        var results = doSearch(query);
+        var html = "<h1>Word search</h1>" + searchFormHTML("page", query);
+        if (!query) {
+          html += '<div class="card"><p style="margin:0">Type a word above and press Enter or tap Search.</p></div>';
+        } else if (!results.length) {
+          html += '<div class="card"><p style="margin:0">No word matching “' + esc(query) + '” was found in the thirty-six books in this app. Try a transliteration (like <em>logos</em> or <em>bara</em>), the word in Greek or Hebrew letters, or a Strong\'s number (like <em>G3056</em> or <em>H1254</em>).</p></div>';
+        } else {
+          var gOcc = greekOcc(), idx = buildSearchIndex();
+          html += '<p class="muted">' + results.length + " result" + (results.length === 1 ? "" : "s") + ' for “' + esc(query) + '” — occurrence counts are counted from the text in this app. Tap a reference to jump to the verse with the word highlighted; tap “Open word study” for the full dictionary panel.</p>';
+          results.forEach(function (r) {
+            html += '<div class="card">';
+            if (r.type === "grk") {
+              var e = LEX[String(r.strong)];
+              var refs = gOcc[r.strong] || [];
+              html += '<div class="result-word">' + esc(e.l) + '</div>' +
+                '<div class="result-meta">' + esc(e.t) + ' · <strong>Strong\'s G' + r.strong + '</strong> · Greek</div>' +
+                (e.d ? "<p>" + esc(shortDef(e.d)) + "</p>" : (GRK_DEF_SUPP[r.strong] ? "<p>" + esc(shortDef(GRK_DEF_SUPP[r.strong])) + "</p>" : "")) +
+                "<p>Appears <strong>" + refs.length + "</strong> time" + (refs.length === 1 ? "" : "s") + " in this app, counted from the text in this app.</p>" +
+                '<p><button class="ctl nav" type="button" data-open-grk="' + r.strong + '">Open word study — ' + esc(e.l) + "</button></p>" +
+                occByBookHTML(refs.map(function (x) { return x; }), r.strong);
+            } else if (r.type === "heb") {
+              var he = LEXHEB[String(r.strong)];
+              var hrefs = idx.hebLemmaAll[r.strong] || [];
+              html += '<div class="result-word heb" dir="rtl" style="text-align:right">' + esc(he.l) + '</div>' +
+                '<div class="result-meta">' + esc(he.t) + ' · <strong>Strong\'s H' + r.strong + '</strong> · Hebrew</div>' +
+                (he.d ? "<p>" + esc(shortDef(he.d)) + "</p>" : "") +
+                "<p>Appears <strong>" + hrefs.length + "</strong> time" + (hrefs.length === 1 ? "" : "s") + " in this app, counted from the text in this app — across every Hebrew and Aramaic book in the app.</p>" +
+                '<p><button class="ctl nav" type="button" data-open-heb="' + r.strong + '">Open word study — <span class="heb">' + esc(he.l) + "</span></button></p>" +
+                occByBookHTML(hrefs, r.strong);
+            } else {
+              var fe = idx.hebFused[r.key];
+              html += '<div class="result-word heb" dir="rtl" style="text-align:right">' + esc(fe.form) + '</div>' +
+                '<div class="result-meta">' + esc(hebTranslit(fe.form)) + ' · Hebrew · <span class="noentry">No dictionary entry of its own</span></div>' +
+                '<p class="lemma-line"><strong>' + esc(fe.gloss ? fe.gloss.replace(/-/g, " ") : "") + "</strong></p>" +
+                "<p>This written form has <strong>no separate dictionary entry of its own</strong> in Strong's — it is a word written as one in the text (for example, a preposition carrying its own pronoun ending), so it is shown here as the form itself, with its gloss and parsing, rather than linked to a dictionary word that does not belong to it." + (fe.parsing ? " Parsing: " + esc(fe.parsing) + "." : "") + "</p>" +
+                "<p>Appears <strong>" + fe.refs.length + "</strong> time" + (fe.refs.length === 1 ? "" : "s") + " in this app, counted from the text in this app.</p>" +
+                occByBookHTML(fe.refs, null);
+            }
+            html += "</div>";
+          });
+        }
+        view.innerHTML = html;
+        wireSearchForm("page");
+        view.querySelectorAll("[data-open-grk]").forEach(function (btn) {
+          btn.addEventListener("click", function () { openGreekLemma(parseInt(btn.getAttribute("data-open-grk"), 10)); });
+        });
+        view.querySelectorAll("[data-open-heb]").forEach(function (btn) {
+          btn.addEventListener("click", function () { openHebrewLemma(parseInt(btn.getAttribute("data-open-heb"), 10), null, "Hebrew"); });
+        });
+        wirePageOccButtons();
+        window.scrollTo(0, 0);
       }
 
       /* ================= Hebrew tagging (this app's own, from BDB + Strong's) ================= */
@@ -1398,6 +1785,13 @@
       var updBtnTop = document.getElementById("upd-btn-top");
       if (updBtnTop) updBtnTop.addEventListener("click", function () { checkForUpdates(null); });
 
+      /* Top-bar word search (runs on Enter / Search tap, not per keystroke). */
+      var topSearch = document.getElementById("top-search");
+      if (topSearch) topSearch.addEventListener("submit", function (e) {
+        e.preventDefault();
+        goSearch(document.getElementById("top-search-q").value);
+      });
+
       function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
       function renderHome() {
@@ -1454,6 +1848,7 @@
         view.innerHTML =
           "<h1>The Bible in its own words</h1>" +
           '<p class="lede">A study Bible for translators and students of the original languages: the Greek and Hebrew text word by word — a translation of each word in its verse under it, the full World English Bible verse beneath every verse, and a study panel on every word with its definition, synonyms and related words — built only from public-domain sources.</p>' +
+          '<div class="card"><h2 style="margin-top:0.2rem">Search a word</h2>' + searchFormHTML("home", "") + "</div>" +
           '<div class="book-cards">' + cards + "</div>" +
           '<div class="card"><h2 style="margin-top:0.2rem">How to read this</h2>' +
           "<p>Each verse is laid out in layers. On top, the <strong>original word</strong> — Greek read left to right, Hebrew read right to left, with its accents and vowel points. Directly beneath it, a small <strong>transliteration</strong> (a pronunciation aid) and the word's <strong>translation in this verse</strong>: the English for that one word, in its actual form and role in the verse — a verb reads as the action it performs here (for example, <em>loved</em>, not the bare dictionary <em>love</em>), and Hebrew words carrying pieces stuck to them — an <em>and</em>, a <em>the</em>, a <em>his</em> — read as a natural short phrase (for example, <em>and he formed</em>).</p>" +
@@ -1471,6 +1866,7 @@
         if (updBtn) updBtn.addEventListener("click", function () {
           checkForUpdates(document.getElementById("upd-status"));
         });
+        wireSearchForm("home");
         window.scrollTo(0, 0);
       }
 
@@ -2034,6 +2430,12 @@
         document.body.classList.remove("hide-tr", "hide-gl");
         if (parts.length === 0) { current = { name: "home" }; renderHome(); }
         else if (parts[0] === "sources") { current = { name: "home" }; renderHome(); var s = document.getElementById("sources"); if (s) s.scrollIntoView(); }
+        else if (parts[0] === "search") {
+          current = { name: "search" };
+          var sq = parts.slice(1).join("/") || "";
+          try { sq = decodeURIComponent(sq); } catch (e) { /* keep the raw text */ }
+          renderSearch(sq);
+        }
         else if (parts.length === 1 && BOOKMAP[parts[0]]) { current = { name: "book", book: parts[0] }; renderBook(BOOKMAP[parts[0]]); }
         else if (parts.length === 2 && BOOKMAP[parts[0]]) {
           var ch = parseInt(parts[1], 10);
