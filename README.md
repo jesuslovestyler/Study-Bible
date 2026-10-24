@@ -7,9 +7,9 @@ A word-by-word interlinear study Bible in Greek, Hebrew, and Aramaic — **relea
 
 ## What this is
 
-50 books are here so far — 398,863 original-language words — and the library keeps growing, book by book:
+52 books are here so far — 411,993 original-language words — and the library keeps growing, book by book:
 
-- **Hebrew and Aramaic (25):** Genesis, Exodus, Leviticus, Numbers, Deuteronomy, Joshua, Judges, Ruth, 1 Samuel, 2 Samuel, 1 Kings, 2 Kings, Job, Psalms, Proverbs, Ecclesiastes, Song of Songs, Isaiah, Jeremiah, Ezekiel, Daniel, Esther, Jonah, Micah, Haggai
+- **Hebrew and Aramaic (27):** Genesis, Exodus, Leviticus, Numbers, Deuteronomy, Joshua, Judges, Ruth, 1 Samuel, 2 Samuel, 1 Kings, 2 Kings, 1 Chronicles, Job, Psalms, Proverbs, Ecclesiastes, Song of Songs, Isaiah, Jeremiah, Ezekiel, Daniel, Esther, Hosea, Jonah, Micah, Haggai
 - **Greek (25):** Matthew, Mark, Luke, John, Acts, Romans, 1 Corinthians, 2 Corinthians, Galatians, Ephesians, Philippians, Colossians, 1 Thessalonians, 2 Thessalonians, 1 Timothy, 2 Timothy, Titus, Philemon, Hebrews, James, 1 Peter, 2 Peter, 1 John, Jude, Revelation
 
 **Every single word carries all of this:**
